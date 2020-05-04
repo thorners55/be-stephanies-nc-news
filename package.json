@@ -8,6 +8,8 @@
     "seed": "knex seed:run",
     "seed-make": "knex seed:make",
     "migrate-make": "knex migrate:make",
+    "migrate-rollback": "knex migrate:rollback",
+    "migrate-latest": "knex migrate:latest",
     "test-utils": "jest spec/utils.spec.js",
     "test": "jest spec/app.spec.js"
   },
