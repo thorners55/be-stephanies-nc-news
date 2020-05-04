@@ -10,7 +10,7 @@
     "migrate-make": "knex migrate:make",
     "migrate-rollback": "knex migrate:rollback",
     "migrate-latest": "knex migrate:latest",
-    "test-utils": "jest spec/utils.spec.js",
+    "test-utils": "jest __tests__/utils.test.js",
     "test": "jest spec/app.spec.js"
   },
   "repository": {
