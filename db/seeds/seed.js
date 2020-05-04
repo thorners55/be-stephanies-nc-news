@@ -16,6 +16,11 @@ exports.seed = function (knex) {
       .then(() => {
         return knex("articles").insert(formatDates(topicData)).returning("*");
       })
+      .then((articles) => {
+        return knex("comments")
+          .insert(formatComments(commentData, makeRefObj(articles)))
+          .returning("*");
+      })
       /* 
       Your article data is currently in the incorrect format and will violate your SQL schema. 
       You will need to write and test the provided formatDate utility function to be able insert your article data.

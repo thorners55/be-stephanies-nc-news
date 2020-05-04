@@ -8,11 +8,15 @@ exports.formatDates = (list) => {
 };
 
 exports.makeRefObj = (list) => {
-  const refArray = list.map((object) => {
-    const { article_id, title } = object;
-    return { article_id, title };
-  });
-  return refArray;
+  const newObj = {};
+  for (let i = 0; i < list.length; i++) {
+    const {
+      article_id: id,
+      title: [articleTitle],
+    } = list[i];
+    newObj[articleTitle] = id;
+  }
+  return newObj;
 };
 
 /* This utility function should be able to take an array (list) of objects and return a reference object. The reference object must be keyed by each item's title, with the values being each item's corresponding id. e.g.
@@ -23,8 +27,29 @@ will become
 
 { A: 1 } */
 
-exports.formatComments = (comments, articleRef) => {};
+exports.formatComments = (comments, articleRef) => {
+  const formattedComments = comments.map((object) => {
+    const {
+      belongs_to: [title],
+      ...restOfKeys
+    } = object;
+    return {
+      article_id: articleRef[title],
+      ...restOfKeys,
+    };
+  });
+  return formattedComments;
+};
+//
 /* This utility function should be able to take an array of comment objects (comments) and a reference object, and return a new array of formatted comments.
+
+{ body: ,
+  article_id: articleRef[title],
+  created_at: *formattedDate*,
+}
+.map 
+{ belongs_to: [title], created_at, ...obj} = obj;
+article_id: articleRef[title]
 
 Each formatted comment must have:
 

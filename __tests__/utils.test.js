@@ -115,11 +115,11 @@ describe("formatDates", () => {
   });
 });
 
-describe.only("makeRefObj", () => {
-  test("returns empty array when passed empty array", () => {
+describe("makeRefObj", () => {
+  test("returns empty object when passed empty array", () => {
     const array = [];
     const testArray = formatDates(array);
-    expect(makeRefObj(testArray)).toEqual([]);
+    expect(makeRefObj(testArray)).toEqual({});
   });
   test("does not mutate original array", () => {
     const array = [
@@ -189,14 +189,96 @@ describe.only("makeRefObj", () => {
       },
     ];
     const testArray = formatDates(array);
-    expect(makeRefObj(testArray)).toEqual([
-      { article_id: 1, title: "A" },
-      { article_id: 2, title: "B" },
-      { article_id: 3, title: "C" },
-    ]);
+    console.log(makeRefObj(testArray));
+    expect(makeRefObj(testArray)).toEqual({ A: 1, B: 2, C: 3 });
   });
-
-  // returns an array
 });
 
-describe("formatComments", () => {});
+describe("formatComments", () => {
+  test("returns empty array when passed empty array", () => {
+    const array = [];
+    expect(formatComments(array)).toEqual([]);
+  });
+  test("doesn't mutate original array", () => {
+    const array = [
+      {
+        body: "I am 100% sure that we're not completely sure.",
+        belongs_to: "A: catspiracy to bring down democracy",
+        created_by: "butter_bridge",
+        votes: 1,
+        created_at: 1069850163389,
+      },
+      {
+        body: "This is a bad article name",
+        belongs_to: "B",
+        created_by: "butter_bridge",
+        votes: 1,
+        created_at: 1038314163389,
+      },
+      {
+        body: "The owls are not what they seem.",
+        belongs_to: "C",
+        created_by: "icellusedkars",
+        votes: 20,
+        created_at: 1006778163389,
+      },
+    ];
+    formatComments(array);
+    expect(array).toEqual([
+      {
+        body: "I am 100% sure that we're not completely sure.",
+        belongs_to: "A: catspiracy to bring down democracy",
+        created_by: "butter_bridge",
+        votes: 1,
+        created_at: 1069850163389,
+      },
+      {
+        body: "This is a bad article name",
+        belongs_to: "B",
+        created_by: "butter_bridge",
+        votes: 1,
+        created_at: 1038314163389,
+      },
+      {
+        body: "The owls are not what they seem.",
+        belongs_to: "C",
+        created_by: "icellusedkars",
+        votes: 20,
+        created_at: 1006778163389,
+      },
+    ]);
+  });
+  test.only("right properties and values", () => {
+    const array = [
+      {
+        body: "I am 100% sure that we're not completely sure.",
+        belongs_to: "A: catspiracy to bring down democracy",
+        created_by: "butter_bridge",
+        votes: 1,
+        created_at: 1069850163389,
+      },
+      {
+        body: "This is a bad article name",
+        belongs_to: "B",
+        created_by: "butter_bridge",
+        votes: 1,
+        created_at: 1038314163389,
+      },
+      {
+        body: "The owls are not what they seem.",
+        belongs_to: "C",
+        created_by: "icellusedkars",
+        votes: 20,
+        created_at: 1006778163389,
+      },
+    ];
+    const refObj = { A: 1, B: 2, C: 3 };
+    expect(formatComments(array, refObj)).toEqual([]);
+  });
+});
+// "returns empty array when passed empty array"
+// created_by property renamed to author (doesnt have CB, has author)
+// has article id key which corresponds to original title
+// created_at converted to JS object
+// maintains other properties
+// doesn't mutate original array
