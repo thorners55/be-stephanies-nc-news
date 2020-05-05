@@ -1,7 +1,7 @@
 exports.formatDates = (list) => {
   const newArray = list.map((object) => {
     const { created_at: timestamp, ...restOfKeys } = object;
-    console.log(new Date(timestamp));
+    new Date(timestamp);
     return { ...restOfKeys, created_at: new Date(timestamp) };
   });
   return newArray;
@@ -31,10 +31,14 @@ exports.formatComments = (comments, articleRef) => {
   const formattedComments = comments.map((object) => {
     const {
       belongs_to: [title],
+      created_by: username,
+      created_at: time,
       ...restOfKeys
     } = object;
     return {
+      author: username,
       article_id: articleRef[title],
+      created_at: new Date(time),
       ...restOfKeys,
     };
   });

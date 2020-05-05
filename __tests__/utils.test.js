@@ -4,6 +4,8 @@ const {
   formatComments,
 } = require("../db/utils/utils");
 
+// https://github.com/thorners55/nc-news/blob/master/db/utils/README.md
+
 describe("formatDates", () => {
   test("returns empty array when passed empty array", () => {
     expect(formatDates([])).toEqual([]);
@@ -110,7 +112,7 @@ describe("formatDates", () => {
         created_at: new Date(785420514171),
       },
     ];
-    console.log(formatDates(expectedList));
+    formatDates(expectedList);
     expect(formatDates(list)).toEqual(expectedList);
   });
 });
@@ -189,7 +191,7 @@ describe("makeRefObj", () => {
       },
     ];
     const testArray = formatDates(array);
-    console.log(makeRefObj(testArray));
+    makeRefObj(testArray);
     expect(makeRefObj(testArray)).toEqual({ A: 1, B: 2, C: 3 });
   });
 });
@@ -223,7 +225,8 @@ describe("formatComments", () => {
         created_at: 1006778163389,
       },
     ];
-    formatComments(array);
+    const objRef = { A: 1, B: 2, C: 3 };
+    formatComments(array, objRef);
     expect(array).toEqual([
       {
         body: "I am 100% sure that we're not completely sure.",
@@ -248,11 +251,35 @@ describe("formatComments", () => {
       },
     ]);
   });
-  test.only("right properties and values", () => {
+  test("belongs_to has been changed to article_id with corresponding original title value provided, created_by property has been changed to author, maintains other properties", () => {
+    const outputArray = [
+      {
+        body: "I am 100% sure that we're not completely sure.",
+        article_id: 1,
+        author: "butter_bridge",
+        votes: 1,
+        created_at: new Date(1069850163389),
+      },
+      {
+        body: "This is a bad article name",
+        article_id: 2,
+        author: "butter_bridge",
+        votes: 1,
+        created_at: new Date(1038314163389),
+      },
+      {
+        body: "The owls are not what they seem.",
+        article_id: 3,
+        author: "icellusedkars",
+        votes: 20,
+        created_at: new Date(1006778163389),
+      },
+    ];
+    const refObj = { A: 1, B: 2, C: 3 };
     const array = [
       {
         body: "I am 100% sure that we're not completely sure.",
-        belongs_to: "A: catspiracy to bring down democracy",
+        belongs_to: "A",
         created_by: "butter_bridge",
         votes: 1,
         created_at: 1069850163389,
@@ -272,13 +299,11 @@ describe("formatComments", () => {
         created_at: 1006778163389,
       },
     ];
-    const refObj = { A: 1, B: 2, C: 3 };
-    expect(formatComments(array, refObj)).toEqual([]);
+    expect(formatComments(array, refObj)).toEqual(outputArray);
+    expect(formatComments(array, refObj)[1]).toHaveProperty(
+      "author",
+      "butter_bridge"
+    );
   });
 });
-// "returns empty array when passed empty array"
-// created_by property renamed to author (doesnt have CB, has author)
-// has article id key which corresponds to original title
-// created_at converted to JS object
-// maintains other properties
-// doesn't mutate original array
+//REFACTOR TO USE HAVEOWNPROPERTY ETC INSTEAD OF COPYING AND PASTING FULL ARRAY?
