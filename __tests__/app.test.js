@@ -57,12 +57,11 @@ describe("app", () => {
     describe.only("/articles", () => {
       describe("/:article_id", () => {
         describe("GET", () => {
-          test("status 200: responds with an article object", () => {
+          test("status 200: responds with relevent article object with a comment count property", () => {
             return request(app)
               .get("/api/articles/1")
               .expect(200)
               .then(({ body }) => {
-                console.log(body);
                 expect(body.article_id).toBe(1);
                 expect(body).toHaveProperty("comment_count");
                 expect(body).toEqual({
@@ -73,8 +72,17 @@ describe("app", () => {
                   topic: "mitch",
                   author: "butter_bridge",
                   created_at: "2018-11-15T12:21:54.171Z",
-                  comment_count: 13,
+                  comment_count: "13",
                 });
+              });
+          });
+          test("status 200: will respond with comment count of 0 if there are no comments", () => {
+            return request(app)
+              .get("/api/articles/2")
+              .expect(200)
+              .then(({ body }) => {
+                expect(body.article_id).toBe(2);
+                expect(body.comment_count).toBe("0");
               });
           });
         });
