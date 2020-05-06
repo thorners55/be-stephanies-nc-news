@@ -36,6 +36,27 @@ describe("app", () => {
             });
         });
       });
+      describe("Error handling", () => {
+        test("status 404: unsupported /api route", () => {
+          return request(app)
+            .get("/api/mushrooms")
+            .expect(400)
+            .then((res) => {
+              expect(res.body.msg).toBe("400 Bad Request");
+            });
+        });
+        test("status 404: unsupported / route", () => {
+          return request(app)
+            .get("/mushrooms")
+            .expect(400)
+            .then((res) => {
+              expect(res.body.msg).toBe("400 Bad Request");
+            });
+        });
+        test("status 405: unsupported HTTP method", () => {
+          return request(app).post("/api/topics").expect(405);
+        });
+      });
     });
     describe("/users/:username", () => {
       describe("GET", () => {
@@ -54,7 +75,7 @@ describe("app", () => {
         });
       });
     });
-    describe.only("/articles", () => {
+    describe("/articles", () => {
       describe("/:article_id", () => {
         describe("GET", () => {
           test("status 200: responds with relevent article object with a comment count property", () => {
