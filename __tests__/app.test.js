@@ -42,7 +42,7 @@ describe("app", () => {
             .get("/api/mushrooms")
             .expect(400)
             .then((res) => {
-              expect(res.body.msg).toBe("400 Bad Request");
+              expect(res.body.msg).toBe("400 Bad Request: Route not found");
             });
         });
         test("status 404: unsupported / route", () => {
@@ -50,7 +50,7 @@ describe("app", () => {
             .get("/mushrooms")
             .expect(400)
             .then((res) => {
-              expect(res.body.msg).toBe("400 Bad Request");
+              expect(res.body.msg).toBe("400 Bad Request: Route not found");
             });
         });
         test("status 405: unsupported HTTP method", () => {
@@ -68,9 +68,20 @@ describe("app", () => {
             .get("/api/users/lurker")
             .expect(200)
             .then(({ body }) => {
+              console.log(body, "<-----");
               expect(body).toHaveProperty("username", "lurker");
               expect(body).toHaveProperty("avatar_url");
               expect(body).toHaveProperty("name");
+            });
+        });
+      });
+      describe("Error handling", () => {
+        test("status 400: request for invalid username", () => {
+          return request(app)
+            .get("/api/users/hubbubofcheeps")
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).toBe("400 Bad Request: username does not exist");
             });
         });
       });
@@ -108,11 +119,11 @@ describe("app", () => {
           });
         });
       });
-      xdescribe("GET", () => {
-        test("status 200", () => {
+      describe("GET", () => {
+        xtest("status 200", () => {
           return request(app).get("/api/articles").expect(200);
         });
-        test("responds with an array of objects", () => {
+        xtest("responds with an array of objects", () => {
           return request(app)
             .get("/api/articles")
             .expect(200)
@@ -124,7 +135,7 @@ describe("app", () => {
               expect(testingProperties.length).toBe(12);
             });
         });
-        test("response array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
+        xtest("response array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
           return request(app)
             .get("/api/articles")
             .expect(200)
