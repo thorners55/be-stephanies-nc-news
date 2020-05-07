@@ -3,8 +3,7 @@ const app = express();
 
 const { apiRouter } = require("./routers/api-router.js");
 const {
-  handler400,
-  handler405,
+  handler404,
   handleInternalErrors,
   handlePSQLErrors,
 } = require("./controllers/errors-controller.js");
@@ -12,14 +11,10 @@ const {
 app.use(express.json());
 app.use("/api", apiRouter);
 
-app.use(handler400);
-app.use(handler405);
+app.route("/*").all(handler404);
+// app.use(handler400);
+// app.use(handler405);
 app.use(handlePSQLErrors);
 app.use(handleInternalErrors);
-
-/*(err, req, res, next) => {
-  console.log(err);
-  res.status(500).send({ msg: "500 Internal Server Error" });
-} */
 
 module.exports = app;

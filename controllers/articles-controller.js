@@ -2,7 +2,8 @@ const {
   selectArticle,
   updateArticleVotes,
 } = require("../models/articles-model.js");
-const { selectCommentByArticleId } = require("../models/comments-model.js");
+
+const { insertComment } = require("../models/comments-model.js");
 
 exports.getArticle = (req, res, next) => {
   const reqArticleId = parseInt(req.params.article_id);
@@ -29,11 +30,25 @@ exports.patchArticleById = (req, res, next) => {
   updateArticleVotes(reqArticleId, inc_votes)
     .then((article) => {
       console.log(article);
-      return res.status(200).send(article[0]);
+      return res.status(200).send({ article });
     })
     .catch((err) => {
       next(err);
     });
+};
+
+exports.postComment = (req, res, next) => {
+  console.log("inside postComment in articles controller");
+  const { username } = req.body;
+  const { body } = req.body;
+  console.log(username);
+  console.log(body);
+  const reqArticleId = parseInt(req.params.article_id);
+  insertComment(reqArticleId, username, body).then((responseComment) => {
+    console.log("back inside postComment in articles controller");
+    const comment = responseComment[0];
+    return res.status(201).send({ comment });
+  });
 };
 
 /* selectArticles()

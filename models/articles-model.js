@@ -17,13 +17,14 @@ exports.updateArticleVotes = (articleId, votes) => {
     .increment("votes", votes)
     .where("article_id", articleId)
     .returning("*");
-  /*
+};
+/*
     .then((article) => {
       console.log(article, "<---------------------_");
       res.status(200).send({ article });
     }); */
-  //.catch(next);
-};
+//.catch(next);
+
 // Select all from articles where article_id is articleId
 
 // Select info from articles

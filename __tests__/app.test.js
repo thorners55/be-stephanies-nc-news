@@ -13,26 +13,24 @@ describe("app", () => {
         test("responds with status 200", () => {
           return request(app).get("/api/topics").expect(200);
         });
-        test("responds with an array of objects", () => {
+        test("responds with an object with a key of topic, value is array", () => {
           return request(app)
             .get("/api/topics")
             .expect(200)
             .then(({ body }) => {
-              const testingProperties = body.filter((object) => {
-                return object === Object(object);
-              });
-              expect(Array.isArray(body)).toBe(true);
-              expect(testingProperties.length).toBe(3);
+              console.log(body);
+              expect(Array.isArray(body.topics)).toBe(true);
             });
         });
-        test("response array elements have properties of description and slug", () => {
+        test("response topic objects have properties of keys and slugs", () => {
           return request(app)
             .get("/api/topics")
             .expect(200)
             .then(({ body }) => {
-              body.forEach((topic) => {
-                expect(topic).toHaveProperty("slug");
-                expect(topic).toHaveProperty("description");
+              console.log(body.topics);
+              const correctProperties = body.topics.forEach((object) => {
+                expect(object).toHaveProperty("slug");
+                expect(object).toHaveProperty("description");
               });
             });
         });
@@ -41,21 +39,26 @@ describe("app", () => {
         test("status 404: unsupported /api route", () => {
           return request(app)
             .get("/api/mushrooms")
-            .expect(400)
+            .expect(404)
             .then((res) => {
-              expect(res.body.msg).toBe("400 Bad Request: Route not found");
+              expect(res.body.msg).toBe("404 Bad Request: Route not found");
             });
         });
         test("status 404: unsupported / route", () => {
           return request(app)
             .get("/mushrooms")
-            .expect(400)
+            .expect(404)
             .then((res) => {
-              expect(res.body.msg).toBe("400 Bad Request: Route not found");
+              expect(res.body.msg).toBe("404 Bad Request: Route not found");
             });
         });
         test("status 405: unsupported HTTP method", () => {
-          return request(app).post("/api/topics").expect(405);
+          return request(app)
+            .post("/api/topics")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
+            });
         });
       });
     });
@@ -70,19 +73,19 @@ describe("app", () => {
             .expect(200)
             .then(({ body }) => {
               console.log(body, "<-----");
-              expect(body).toHaveProperty("username", "lurker");
-              expect(body).toHaveProperty("avatar_url");
-              expect(body).toHaveProperty("name");
+              expect(body.user).toHaveProperty("username", "lurker");
+              expect(body.user).toHaveProperty("avatar_url");
+              expect(body.user).toHaveProperty("name");
             });
         });
       });
       describe("Error handling", () => {
-        test("status 400: request for invalid username", () => {
+        test("status 404: request for invalid username", () => {
           return request(app)
             .get("/api/users/userDoesNotExist")
-            .expect(400)
+            .expect(404)
             .then(({ body }) => {
-              expect(body.msg).toBe("400 Bad Request: username does not exist");
+              expect(body.msg).toBe("404 Bad Request: username does not exist");
             });
         });
         test("status 405: unsupported HTTP method", () => {
@@ -97,6 +100,26 @@ describe("app", () => {
     });
     describe("/articles", () => {
       describe("/:article_id", () => {
+        describe("POST", () => {
+          test("status 201: posts a comment", () => {
+            return request(app)
+              .post("/api/articles/1/comments")
+              .send({ username: "butter_bridge", body: "This is a comment" })
+              .expect(201);
+          });
+          test("status 201: has posted correc values of username and body onto comment", () => {
+            return request(app)
+              .post("/api/articles/1/comments")
+              .send({ username: "butter_bridge", body: "This is a comment" })
+              .expect(201)
+              .then(({ body }) => {
+                console.log(body);
+                expect(body.comment.author).toBe("butter_bridge");
+                expect(body.comment.body).toBe("This is a comment");
+                expect(body.comment.article_id).toBe(1);
+              });
+          });
+        });
         describe("GET", () => {
           test("status 200: responds with relevent article object with a comment count property", () => {
             return request(app)
@@ -127,15 +150,37 @@ describe("app", () => {
               });
           });
         });
-        describe.only("PATCH", () => {
+        describe("PATCH", () => {
+          test("status 200: responds with an object with property article, value is an object", () => {
+            return request(app)
+              .patch("/api/articles/2")
+              .send({ inc_votes: 5 })
+              .expect(200)
+              .then(({ body }) => {
+                console.log(body);
+                expect(Array.isArray(body.article)).toBe(true);
+                expect(body.article[0]).toHaveProperty("article_id");
+              });
+          });
           test("status 200: update votes on an article", () => {
             return request(app)
               .patch("/api/articles/2")
               .send({ inc_votes: 5 })
               .expect(200)
               .then(({ body }) => {
-                expect(body.votes).toBe(5);
-                expect(body.article_id).toBe(2);
+                console.log(body);
+                expect(body.article[0].votes).toBe(5);
+                expect(body.article[0].article_id).toBe(2);
+              });
+          });
+          test("status 200: update votes by negative number on an article", () => {
+            return request(app)
+              .patch("/api/articles/4")
+              .send({ inc_votes: -5 })
+              .expect(200)
+              .then(({ body }) => {
+                expect(body.article[0].votes).toBe(-5);
+                expect(body.article[0].article_id).toBe(4);
               });
           });
         });

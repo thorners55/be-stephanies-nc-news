@@ -5,8 +5,9 @@ exports.getUser = (req, res, next) => {
   const reqUsername = req.params.username;
   selectUser(reqUsername).then((users) => {
     console.log(users);
+    user = users[0];
     if (users.length === 0)
-      res.status(400).send({ msg: "400 Bad Request: username does not exist" });
-    else res.status(200).send(users[0]);
+      res.status(404).send({ msg: "404 Bad Request: username does not exist" });
+    else res.status(200).send({ user });
   });
 };

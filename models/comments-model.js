@@ -11,6 +11,14 @@ exports.selectCommentByArticleId = (articleId) => {
     .groupBy("article_id");
 };
 
+exports.insertComment = (articleId, username, body) => {
+  console.log("inside insertComment in comments-model");
+  return knex("comments")
+    .insert([{ body: body, author: username, article_id: articleId }])
+    .where("comments.article_id", articleId)
+    .returning("*");
+};
+
 /*   return knex("comments")
     .count("article_id as comment_count")
     .where("article_id", articleId);*/

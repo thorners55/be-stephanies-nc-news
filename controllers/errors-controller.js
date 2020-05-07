@@ -1,7 +1,8 @@
-exports.handler400 = (req, res, next) => {
+exports.handler404 = (req, res, next) => {
   console.log("inside handler400");
   console.log(req.body);
-  res.status(400).send({ msg: "400 Bad Request: Route not found" });
+  res.status(404).send({ msg: "404 Bad Request: Route not found" });
+  // route would be 404
 };
 
 exports.handler405 = (req, res) => {
