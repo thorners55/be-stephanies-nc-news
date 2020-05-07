@@ -118,14 +118,16 @@ describe("app", () => {
                 expect(body.comment.article_id).toBe(1);
               });
           });
-          describe("POST Error handling", () => {
-            test("status 422: Could not find article id", () => {
+          describe("POST /api/articles/article_id Error handling", () => {
+            test("status 422: article id does not exist", () => {
               return request(app)
                 .post("/api/articles/50000/comments")
                 .send({ username: "butter_bridge", body: "This is a comment" })
                 .expect(422)
                 .then(({ body }) => {
-                  expect(body.msg).toBe("article id does not exist");
+                  expect(body.msg).toBe(
+                    "422 Unprocessable Entity - article id does not exist"
+                  );
                 });
             });
             test("status 422: Username does not exist", () => {
@@ -134,7 +136,9 @@ describe("app", () => {
                 .send({ username: "IRUser", body: "This is a comment" })
                 .expect(422)
                 .then(({ body }) => {
-                  expect(body.msg).toBe("username does not exist");
+                  expect(body.msg).toBe(
+                    "422 Unprocessable Entity - username does not exist"
+                  );
                 });
             });
           });
@@ -202,8 +206,43 @@ describe("app", () => {
                 expect(body.article[0].article_id).toBe(4);
               });
           });
+          describe("PATCH /api/articles/:article_id Error handling", () => {
+            test("status 400: Bad request - no inc_votes on request body", () => {
+              return request(app)
+                .patch("/api/articles/1")
+                .send({})
+                .expect(400)
+                .then(({ body }) => {
+                  console.log(body);
+                });
+            });
+            test("status 400: invalid request - invalid inc_votes value", () => {
+              return request(app)
+                .patch("/api/articles/1")
+                .send({ inc_votes: "cat" })
+                .expect(400)
+                .then(({ body }) => {
+                  console.log(body);
+                  expect(body.msg).toBe(
+                    "400 Bad Request: Cannot access information - invalid request"
+                  );
+                });
+            });
+            test("status 400: invalid request - invalid property on request body", () => {
+              return request(app)
+                .patch("/api/articles/1")
+                .send({ inc_votes: 1, name: "Stephanie" })
+                .expect(400)
+                .then(({ body }) => {
+                  console.log(body);
+                  expect(body.msg).toBe(
+                    "400 Bad Request: Cannot access information - invalid request"
+                  );
+                });
+            });
+          });
         });
-        describe("Error handling", () => {
+        describe("GET /api/users/:article_id Error handling", () => {
           test("status 400: article_id requested does not exist", () => {
             return request(app)
               .get("/api/articles/666")
@@ -220,7 +259,7 @@ describe("app", () => {
               .expect(400)
               .then(({ body }) => {
                 expect(body.msg).toBe(
-                  "400 Bad Request: Cannot access information - invalid input"
+                  "400 Bad Request: Cannot access information - invalid request"
                 );
               });
           });
