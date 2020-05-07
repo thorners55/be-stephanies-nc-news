@@ -78,10 +78,18 @@ describe("app", () => {
       describe("Error handling", () => {
         test("status 400: request for invalid username", () => {
           return request(app)
-            .get("/api/users/hubbubofcheeps")
+            .get("/api/users/userDoesNotExist")
             .expect(400)
             .then(({ body }) => {
               expect(body.msg).toBe("400 Bad Request: username does not exist");
+            });
+        });
+        test("status 405: unsupported HTTP method", () => {
+          return request(app)
+            .post("/api/users/userDoesNotExist")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
             });
         });
       });
@@ -118,9 +126,40 @@ describe("app", () => {
               });
           });
         });
+        describe("PATCH", () => {});
+        describe("Error handling", () => {
+          test("status 400: article_id requested does not exist", () => {
+            return request(app)
+              .get("/api/articles/666")
+              .expect(400)
+              .then(({ body }) => {
+                expect(body.msg).toBe(
+                  "400 Bad Request: article does not exist"
+                );
+              });
+          });
+          test("status 400: bad article_id", () => {
+            return request(app)
+              .get("/api/articles/anArticle")
+              .expect(400)
+              .then(({ body }) => {
+                expect(body.msg).toBe(
+                  "400 Bad Request: Cannot access information - invalid input"
+                );
+              });
+          });
+          test("status 405: unsupported HTTP method", () => {
+            return request(app)
+              .post("/api/articles/newId")
+              .expect(405)
+              .then(({ body }) => {
+                expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
+              });
+          });
+        });
       });
-      describe("GET", () => {
-        xtest("status 200", () => {
+      xdescribe("GET", () => {
+        test("status 200", () => {
           return request(app).get("/api/articles").expect(200);
         });
         xtest("responds with an array of objects", () => {

@@ -3,14 +3,16 @@ const app = express();
 const { apiRouter } = require("./routers/api-router.js");
 const {
   handler400,
-  handleCustomErrors,
+  handleInternalErrors,
+  handlePSQLErrors,
 } = require("./controllers/errors-controller.js");
 
 app.use("/api", apiRouter);
 
 app.use(handler400);
 
-//app.use(handleCustomErrors);
+app.use(handlePSQLErrors);
+app.use(handleInternalErrors);
 
 /*(err, req, res, next) => {
   console.log(err);
