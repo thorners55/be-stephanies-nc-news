@@ -135,6 +135,7 @@ describe("app", () => {
               .expect(200)
               .then(({ body }) => {
                 expect(body.votes).toBe(5);
+                expect(body.article_id).toBe(2);
               });
           });
         });
