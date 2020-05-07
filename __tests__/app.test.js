@@ -107,17 +107,36 @@ describe("app", () => {
               .send({ username: "butter_bridge", body: "This is a comment" })
               .expect(201);
           });
-          test("status 201: has posted correc values of username and body onto comment", () => {
+          test("status 201: has posted correct values of username and body onto comment and returns comment object", () => {
             return request(app)
               .post("/api/articles/1/comments")
               .send({ username: "butter_bridge", body: "This is a comment" })
               .expect(201)
               .then(({ body }) => {
-                console.log(body);
                 expect(body.comment.author).toBe("butter_bridge");
                 expect(body.comment.body).toBe("This is a comment");
                 expect(body.comment.article_id).toBe(1);
               });
+          });
+          describe("POST Error handling", () => {
+            test("status 422: Could not find article id", () => {
+              return request(app)
+                .post("/api/articles/50000/comments")
+                .send({ username: "butter_bridge", body: "This is a comment" })
+                .expect(422)
+                .then(({ body }) => {
+                  expect(body.msg).toBe("article id does not exist");
+                });
+            });
+            test("status 422: Username does not exist", () => {
+              return request(app)
+                .post("/api/articles/50000/comments")
+                .send({ username: "IRUser", body: "This is a comment" })
+                .expect(422)
+                .then(({ body }) => {
+                  expect(body.msg).toBe("username does not exist");
+                });
+            });
           });
         });
         describe("GET", () => {

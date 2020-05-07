@@ -44,11 +44,15 @@ exports.postComment = (req, res, next) => {
   console.log(username);
   console.log(body);
   const reqArticleId = parseInt(req.params.article_id);
-  insertComment(reqArticleId, username, body).then((responseComment) => {
-    console.log("back inside postComment in articles controller");
-    const comment = responseComment[0];
-    return res.status(201).send({ comment });
-  });
+  insertComment(reqArticleId, username, body)
+    .then((responseComment) => {
+      console.log("back inside postComment in articles controller");
+      const comment = responseComment[0];
+      return res.status(201).send({ comment });
+    })
+    .catch((err) => {
+      next(err);
+    });
 };
 
 /* selectArticles()

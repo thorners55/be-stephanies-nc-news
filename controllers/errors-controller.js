@@ -18,10 +18,14 @@ exports.handlePSQLErrors = (err, req, res, next) => {
       status: 400,
       msg: "400 Bad Request: Cannot access information - invalid input",
     },
+    "23503": { status: 422, msg: "article id does not exist" },
   };
+  if (err.constraint === "comments_author_foreign") {
+    errorCodes["23503"].msg = "username does not exist";
+  }
   if (err.code in errorCodes) {
     const { status, msg } = errorCodes[err.code];
-    res.status(400).send({ msg });
+    res.status(status).send({ msg });
   } else next(err);
 };
 
