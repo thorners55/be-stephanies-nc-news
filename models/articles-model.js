@@ -11,6 +11,21 @@ exports.selectArticle = (articleId) => {
     .groupBy("articles.article_id");
 };
 
+exports.updateArticleVotes = (articleId, votes) => {
+  console.log("inside updateArticleVotes in articles model");
+  return knex("articles")
+    .increment("votes", votes)
+    .where("article_id", articleId)
+    .returning("*");
+  /*
+    .then((article) => {
+      console.log(article, "<---------------------_");
+      res.status(200).send({ article });
+    }); */
+  //.catch(next);
+};
+// Select all from articles where article_id is articleId
+
 // Select info from articles
 // Make a new count from comments.article_id and name it comment_count on articles
 // Only get the info for where articles.article_id matched the request parameter

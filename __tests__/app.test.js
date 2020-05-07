@@ -3,6 +3,7 @@ const request = require("supertest");
 const app = require("../app.js");
 const knex = require("../db/connection.js");
 
+beforeEach(() => knex.seed.run());
 afterAll(() => knex.destroy());
 
 describe("app", () => {
@@ -126,7 +127,17 @@ describe("app", () => {
               });
           });
         });
-        describe("PATCH", () => {});
+        describe.only("PATCH", () => {
+          test("status 200: update votes on an article", () => {
+            return request(app)
+              .patch("/api/articles/2")
+              .send({ inc_votes: 5 })
+              .expect(200)
+              .then(({ body }) => {
+                expect(body.votes).toBe(5);
+              });
+          });
+        });
         describe("Error handling", () => {
           test("status 400: article_id requested does not exist", () => {
             return request(app)
