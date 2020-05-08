@@ -15,6 +15,11 @@
     "test-api": "jest __tests__/app.test.js",
     "test": "jest spec/app.spec.js"
   },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "jest-sorted"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/northcoders/be-nc-news.git"
@@ -33,6 +38,7 @@
   "devDependencies": {
     "express": "^4.17.1",
     "jest": "^25.5.4",
+    "jest-sorted": "^1.0.6",
     "supertest": "^4.0.2"
   }
 }

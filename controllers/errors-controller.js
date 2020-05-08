@@ -29,13 +29,24 @@ exports.handlePSQLErrors = (err, req, res, next) => {
       status: 422,
       msg: "422 Unprocessable Entity - article id does not exist",
     },
+    "42703": {
+      status: 422,
+      msg: "422 Unprocessable Entity - sort_by or order request does not exist",
+    },
   };
   if (err.constraint === "comments_author_foreign") {
     errorCodes["23503"].msg =
       "422 Unprocessable Entity - username does not exist";
-  }
-  if (err.code in errorCodes) {
+  } else if (err.code in errorCodes) {
     const { status, msg } = errorCodes[err.code];
+    res.status(status).send({ msg });
+  } else if (err.msg === "article not found") {
+    console.log(err);
+    const { msg, status } = err;
+    console.log(msg);
+    res.status(status).send({ msg });
+  } else if (err.msg === "username not found") {
+    const { msg, status } = err;
     res.status(status).send({ msg });
   } else next(err);
 };

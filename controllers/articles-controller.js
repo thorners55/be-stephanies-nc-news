@@ -49,11 +49,17 @@ exports.patchArticleById = (req, res, next) => {
 exports.getComments = (req, res, next) => {
   console.log("inside getComments in articles controller");
   const { article_id } = req.params;
+  const { sort_by } = req.query;
+  const { order } = req.query;
+  const reqArticleId = parseInt(article_id);
   console.log(article_id);
-  selectAllCommentsByArticleId(article_id)
+  selectAllCommentsByArticleId(reqArticleId, sort_by, order)
     .then((comments) => {
       console.log("back inside getComments in articles controller");
-      return res.status(200).send({ comments });
+      console.log(comments);
+      if (comments.length === 0)
+        return res.status(404).send({ status: 404, msg: "No comments found" });
+      else return res.status(200).send({ comments });
     })
     .catch((err) => {
       next(err);

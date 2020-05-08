@@ -101,7 +101,7 @@ describe("app", () => {
     describe("/articles", () => {
       describe("/:article_id", () => {
         describe("/:article_id/comments", () => {
-          describe.only("GET", () => {
+          describe("GET", () => {
             test("status 200", () => {
               return request(app).get("/api/articles/1/comments").expect(200);
             });
@@ -141,217 +141,333 @@ describe("app", () => {
                   });
                 });
             });
-          });
-        });
-
-        describe("POST", () => {
-          test("status 201: posts a comment", () => {
-            return request(app)
-              .post("/api/articles/1/comments")
-              .send({ username: "butter_bridge", body: "This is a comment" })
-              .expect(201);
-          });
-          test("status 201: has posted correct values of username and body onto comment and returns comment object", () => {
-            return request(app)
-              .post("/api/articles/1/comments")
-              .send({ username: "butter_bridge", body: "This is a comment" })
-              .expect(201)
-              .then(({ body }) => {
-                expect(body.comment.author).toBe("butter_bridge");
-                expect(body.comment.body).toBe("This is a comment");
-                expect(body.comment.article_id).toBe(1);
-              });
-          });
-          describe("POST /api/articles/article_id Error handling", () => {
-            test("status 422: article id does not exist", () => {
+            test("status 200: QUERY - sorts comments by created_at in descending order by default", () => {
               return request(app)
-                .post("/api/articles/50000/comments")
-                .send({ username: "butter_bridge", body: "This is a comment" })
-                .expect(422)
+                .get("/api/articles/1/comments?sort_by=created_at")
+                .expect(200)
                 .then(({ body }) => {
-                  expect(body.msg).toBe(
-                    "422 Unprocessable Entity - article id does not exist"
-                  );
+                  console.log(body.comments);
+                  expect(body.comments).toBeSortedBy("created_at", {
+                    descending: true,
+                  });
                 });
             });
-            test("status 422: Username does not exist", () => {
+            test("status 200: QUERY - sorts comments by any valid column in descending order by default", () => {
               return request(app)
-                .post("/api/articles/50000/comments")
-                .send({ username: "IRUser", body: "This is a comment" })
-                .expect(422)
+                .get("/api/articles/1/comments?sort_by=author")
+                .expect(200)
                 .then(({ body }) => {
-                  expect(body.msg).toBe(
-                    "422 Unprocessable Entity - username does not exist"
-                  );
+                  console.log(body.comments);
+                  expect(body.comments).toBeSortedBy("author", {
+                    descending: true,
+                  });
                 });
             });
-          });
-        });
-
-        describe("GET", () => {
-          test("status 200: responds with relevent article object with a comment count property", () => {
-            return request(app)
-              .get("/api/articles/1")
-              .expect(200)
-              .then(({ body }) => {
-                expect(body.article_id).toBe(1);
-                expect(body).toHaveProperty("comment_count");
-                expect(body).toEqual({
-                  article_id: 1,
-                  title: "Living in the shadow of a great man",
-                  body: "I find this existence challenging",
-                  votes: 100,
-                  topic: "mitch",
-                  author: "butter_bridge",
-                  created_at: "2018-11-15T12:21:54.171Z",
-                  comment_count: "13",
-                });
-              });
-          });
-          test("status 200: will respond with comment count of 0 if there are no comments", () => {
-            return request(app)
-              .get("/api/articles/2")
-              .expect(200)
-              .then(({ body }) => {
-                expect(body.article_id).toBe(2);
-                expect(body.comment_count).toBe("0");
-              });
-          });
-        });
-        describe("PATCH", () => {
-          test("status 200: responds with an object with property article, value is an object", () => {
-            return request(app)
-              .patch("/api/articles/2")
-              .send({ inc_votes: 5 })
-              .expect(200)
-              .then(({ body }) => {
-                console.log(body);
-                expect(Array.isArray(body.article)).toBe(true);
-                expect(body.article[0]).toHaveProperty("article_id");
-              });
-          });
-          test("status 200: update votes on an article", () => {
-            return request(app)
-              .patch("/api/articles/2")
-              .send({ inc_votes: 5 })
-              .expect(200)
-              .then(({ body }) => {
-                console.log(body);
-                expect(body.article[0].votes).toBe(5);
-                expect(body.article[0].article_id).toBe(2);
-              });
-          });
-          test("status 200: update votes by negative number on an article", () => {
-            return request(app)
-              .patch("/api/articles/4")
-              .send({ inc_votes: -5 })
-              .expect(200)
-              .then(({ body }) => {
-                expect(body.article[0].votes).toBe(-5);
-                expect(body.article[0].article_id).toBe(4);
-              });
-          });
-          describe("PATCH /api/articles/:article_id Error handling", () => {
-            test("status 400: Bad request - no inc_votes on request body", () => {
+            test("status 200: QUERY - sorts comments by any valid column in descending order by default", () => {
               return request(app)
-                .patch("/api/articles/1")
-                .send({})
-                .expect(400)
+                .get("/api/articles/1/comments?sort_by=comment_id")
+                .expect(200)
+                .then(({ body }) => {
+                  console.log(body.comments);
+                  expect(body.comments).toBeSortedBy("comment_id", {
+                    descending: true,
+                  });
+                });
+            });
+            test("status 200: QUERY - sorts comments by any valid column in descending order by default", () => {
+              return request(app)
+                .get("/api/articles/1/comments?sort_by=comment_id")
+                .expect(200)
+                .then(({ body }) => {
+                  console.log(body.comments);
+                  expect(body.comments).toBeSortedBy("comment_id", {
+                    descending: true,
+                  });
+                });
+            });
+            test("status 404: QUERY - if no comments, responds 'no comments found'", () => {
+              return request(app)
+                .get("/api/articles/2/comments?sort_by=comment_id")
+                .expect(404)
                 .then(({ body }) => {
                   console.log(body);
+                  expect(body.msg).toBe("No comments found");
                 });
             });
-            test("status 400: invalid request - invalid inc_votes value", () => {
+            test("status 200: QUERY - accepts sort_by AND order request", () => {
               return request(app)
-                .patch("/api/articles/1")
-                .send({ inc_votes: "cat" })
-                .expect(400)
+                .get("/api/articles/1/comments?sort_by=comment_id&order=asc")
+                .expect(200)
                 .then(({ body }) => {
                   console.log(body);
-                  expect(body.msg).toBe(
-                    "400 Bad Request: Cannot access information - invalid request"
-                  );
+                  expect(body.comments).toBeSortedBy("comment_id");
                 });
             });
-            test("status 400: invalid request - invalid property on request body", () => {
+            test("status 200: QUERY - accepts sort_by AND order request", () => {
               return request(app)
-                .patch("/api/articles/1")
-                .send({ inc_votes: 1, name: "Stephanie" })
-                .expect(400)
+                .get("/api/articles/1/comments?sort_by=author&order=asc")
+                .expect(200)
                 .then(({ body }) => {
                   console.log(body);
-                  expect(body.msg).toBe(
-                    "400 Bad Request: Cannot access information - invalid request"
-                  );
+                  expect(body.comments).toBeSortedBy("author");
+                });
+            });
+            test("status 200: QUERY - accepts only order request and returns comments sorted by created_at in ascending order", () => {
+              return request(app)
+                .get("/api/articles/1/comments?order=asc")
+                .expect(200)
+                .then(({ body }) => {
+                  console.log(body);
+                  expect(body.comments).toBeSortedBy("created_at");
                 });
             });
           });
         });
-        describe("GET /api/users/:article_id Error handling", () => {
-          test("status 400: article_id requested does not exist", () => {
+        describe("GET /:article_id/comments Error handling", () => {
+          test("status 404: article id does not exist", () => {
             return request(app)
-              .get("/api/articles/666")
+              .get("/api/articles/10000/comments")
+              .expect(404)
+              .then(({ body }) => {
+                console.log(body.msg);
+                expect(body.msg).toBe("article not found");
+              });
+          });
+          test("status 400: bad article id request", () => {
+            return request(app)
+              .get("/api/articles/hashbrowns/comments")
               .expect(400)
               .then(({ body }) => {
+                console.log(body);
+              });
+          });
+          test("status 400: sort_by query does not exist", () => {
+            return request(app)
+              .get("/api/articles/1/comments?sort_by=toast")
+              .expect(422)
+              .then(({ body }) => {
+                console.log(body);
                 expect(body.msg).toBe(
-                  "400 Bad Request: article does not exist"
+                  "422 Unprocessable Entity - sort_by or order request does not exist"
                 );
               });
           });
-          test("status 400: bad article_id", () => {
+          test("status 422: order query does not exist", () => {
             return request(app)
-              .get("/api/articles/anArticle")
-              .expect(400)
+              .get("/api/articles/1/comments/?sort_by=beans")
+              .expect(422)
               .then(({ body }) => {
                 expect(body.msg).toBe(
-                  "400 Bad Request: Cannot access information - invalid request"
+                  "422 Unprocessable Entity - sort_by or order request does not exist"
                 );
-              });
-          });
-          test("status 405: unsupported HTTP method", () => {
-            return request(app)
-              .post("/api/articles/newId")
-              .expect(405)
-              .then(({ body }) => {
-                expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
               });
           });
         });
       });
-      xdescribe("GET", () => {
-        test("status 200", () => {
-          return request(app).get("/api/articles").expect(200);
-        });
-        xtest("responds with an array of objects", () => {
+    });
+
+    describe("POST", () => {
+      test("status 201: posts a comment", () => {
+        return request(app)
+          .post("/api/articles/1/comments")
+          .send({ username: "butter_bridge", body: "This is a comment" })
+          .expect(201);
+      });
+      test("status 201: has posted correct values of username and body onto comment and returns comment object", () => {
+        return request(app)
+          .post("/api/articles/1/comments")
+          .send({ username: "butter_bridge", body: "This is a comment" })
+          .expect(201)
+          .then(({ body }) => {
+            expect(body.comment.author).toBe("butter_bridge");
+            expect(body.comment.body).toBe("This is a comment");
+            expect(body.comment.article_id).toBe(1);
+          });
+      });
+      describe("POST /api/articles/article_id Error handling", () => {
+        test("status 422: article id does not exist", () => {
           return request(app)
-            .get("/api/articles")
-            .expect(200)
+            .post("/api/articles/50000/comments")
+            .send({ username: "butter_bridge", body: "This is a comment" })
+            .expect(422)
             .then(({ body }) => {
-              const testingProperties = body.filter((object) => {
-                return object === Object(object);
-              });
-              expect(Array.isArray(body)).toBe(true);
-              expect(testingProperties.length).toBe(12);
+              expect(body.msg).toBe(
+                "422 Unprocessable Entity - article id does not exist"
+              );
             });
         });
-        xtest("response array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
+        test("status 422: Username does not exist", () => {
           return request(app)
-            .get("/api/articles")
-            .expect(200)
+            .post("/api/articles/50000/comments")
+            .send({ username: "IRUser", body: "This is a comment" })
+            .expect(422)
             .then(({ body }) => {
-              body.forEach((article) => {
-                expect(article).toHaveProperty("author");
-                expect(article).toHaveProperty("title");
-                expect(article).toHaveProperty("article_id");
-                expect(article).toHaveProperty("topic");
-                expect(article).toHaveProperty("title");
-                expect(article).toHaveProperty("created_at");
-                expect(article).toHaveProperty("votes");
-                expect(article).toHaveProperty("comment_count");
-              });
+              expect(body.msg).toBe("username not found");
             });
         });
       });
+    });
+
+    describe("GET", () => {
+      test("status 200: responds with relevent article object with a comment count property", () => {
+        return request(app)
+          .get("/api/articles/1")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.article_id).toBe(1);
+            expect(body).toHaveProperty("comment_count");
+            expect(body).toEqual({
+              article_id: 1,
+              title: "Living in the shadow of a great man",
+              body: "I find this existence challenging",
+              votes: 100,
+              topic: "mitch",
+              author: "butter_bridge",
+              created_at: "2018-11-15T12:21:54.171Z",
+              comment_count: "13",
+            });
+          });
+      });
+      test("status 200: will respond with comment count of 0 if there are no comments", () => {
+        return request(app)
+          .get("/api/articles/2")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.article_id).toBe(2);
+            expect(body.comment_count).toBe("0");
+          });
+      });
+    });
+    describe("PATCH", () => {
+      test("status 200: responds with an object with property article, value is an object", () => {
+        return request(app)
+          .patch("/api/articles/2")
+          .send({ inc_votes: 5 })
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            expect(Array.isArray(body.article)).toBe(true);
+            expect(body.article[0]).toHaveProperty("article_id");
+          });
+      });
+      test("status 200: update votes on an article", () => {
+        return request(app)
+          .patch("/api/articles/2")
+          .send({ inc_votes: 5 })
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            expect(body.article[0].votes).toBe(5);
+            expect(body.article[0].article_id).toBe(2);
+          });
+      });
+      test("status 200: update votes by negative number on an article", () => {
+        return request(app)
+          .patch("/api/articles/4")
+          .send({ inc_votes: -5 })
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.article[0].votes).toBe(-5);
+            expect(body.article[0].article_id).toBe(4);
+          });
+      });
+      describe("PATCH /api/articles/:article_id Error handling", () => {
+        test("status 400: Bad request - no inc_votes on request body", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .send({})
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+            });
+        });
+        test("status 400: invalid request - invalid inc_votes value", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .send({ inc_votes: "cat" })
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "400 Bad Request: Cannot access information - invalid request"
+              );
+            });
+        });
+        test("status 400: invalid request - invalid property on request body", () => {
+          return request(app)
+            .patch("/api/articles/1")
+            .send({ inc_votes: 1, name: "Stephanie" })
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "400 Bad Request: Cannot access information - invalid request"
+              );
+            });
+        });
+      });
+    });
+    describe("GET /api/users/:article_id Error handling", () => {
+      test("status 400: article_id requested does not exist", () => {
+        return request(app)
+          .get("/api/articles/666")
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("400 Bad Request: article does not exist");
+          });
+      });
+      test("status 400: bad article_id", () => {
+        return request(app)
+          .get("/api/articles/anArticle")
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe(
+              "400 Bad Request: Cannot access information - invalid request"
+            );
+          });
+      });
+      test("status 405: unsupported HTTP method", () => {
+        return request(app)
+          .post("/api/articles/newId")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
+          });
+      });
+    });
+  });
+  xdescribe("GET", () => {
+    test("status 200", () => {
+      return request(app).get("/api/articles").expect(200);
+    });
+    xtest("responds with an array of objects", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          const testingProperties = body.filter((object) => {
+            return object === Object(object);
+          });
+          expect(Array.isArray(body)).toBe(true);
+          expect(testingProperties.length).toBe(12);
+        });
+    });
+    xtest("response array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          body.forEach((article) => {
+            expect(article).toHaveProperty("author");
+            expect(article).toHaveProperty("title");
+            expect(article).toHaveProperty("article_id");
+            expect(article).toHaveProperty("topic");
+            expect(article).toHaveProperty("title");
+            expect(article).toHaveProperty("created_at");
+            expect(article).toHaveProperty("votes");
+            expect(article).toHaveProperty("comment_count");
+          });
+        });
     });
   });
 });
