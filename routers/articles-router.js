@@ -10,6 +10,7 @@ const {
 const { handler405 } = require("../controllers/errors-controller.js");
 
 articlesRouter.route("/").get(getAllArticles);
+
 articlesRouter
   .route("/:article_id")
   .get(getArticle)

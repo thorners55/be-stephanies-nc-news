@@ -51,6 +51,14 @@ exports.insertComment = (articleId, username, body) => {
     });
 };
 
+exports.updateCommentVotes = (commentId, votes) => {
+  console.log("inside updateCommentVotes in comments model");
+  return knex("comments")
+    .increment("votes", votes)
+    .where("comment_id", commentId)
+    .returning("*");
+};
+
 /*   return knex("comments")
     .count("article_id as comment_count")
     .where("article_id", articleId);*/

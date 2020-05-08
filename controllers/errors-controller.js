@@ -20,6 +20,7 @@ exports.handler400 = (req, res) => {
 
 exports.handlePSQLErrors = (err, req, res, next) => {
   console.log({ err }, " <--");
+  const { status, msg } = err;
   const errorCodes = {
     "22P02": {
       status: 400,
@@ -34,6 +35,7 @@ exports.handlePSQLErrors = (err, req, res, next) => {
       msg: "422 Unprocessable Entity - sort_by or order request does not exist",
     },
   };
+  console.log(err.status);
   if (err.constraint === "comments_author_foreign") {
     errorCodes["23503"].msg =
       "422 Unprocessable Entity - username does not exist";
@@ -42,11 +44,12 @@ exports.handlePSQLErrors = (err, req, res, next) => {
     res.status(status).send({ msg });
   } else if (err.msg === "article not found") {
     console.log(err);
-    const { msg, status } = err;
+
     console.log(msg);
     res.status(status).send({ msg });
   } else if (err.msg === "username not found") {
-    const { msg, status } = err;
+    res.status(status).send({ msg });
+  } else if (status === 422) {
     res.status(status).send({ msg });
   } else next(err);
 };

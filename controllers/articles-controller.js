@@ -24,8 +24,13 @@ exports.getAllArticles = (req, res, next) => {
       .then((articles) => {
         console.log("back inside getAllArticles in articles controller");
         console.log(articles);
-
-        return res.status(200).send({ articles });
+        if (articles.length === 0) {
+          return res.status(422).send({
+            status: 422,
+            msg:
+              "422 Unprocessable Entity - sort_by or order request does not exist",
+          });
+        } else return res.status(200).send({ articles });
       })
       .catch((err) => {
         next(err);
@@ -33,25 +38,29 @@ exports.getAllArticles = (req, res, next) => {
   } else {
     console.log(sort_by);
     console.log(order);
-    selectAllArticles(sort_by, order).then((articles) => {
-      console.log("back inside selectAllArticles");
-      console.log(articles);
-      return res.status(200).send({ articles });
-    });
+    selectAllArticles(sort_by, order, { username })
+      .then((articles) => {
+        console.log("back inside selectAllArticles");
+        console.log(articles);
+        return res.status(200).send({ articles });
+      })
+      .catch((err) => {
+        next(err);
+      });
   }
 };
 
 exports.getArticle = (req, res, next) => {
   const reqArticleId = parseInt(req.params.article_id);
-  console.log("inside getArticles controller func");
+  console.log("inside getArticle controller func");
   selectArticle(reqArticleId)
     .then((array) => {
       console.log(array);
-      if (array.length === 0)
-        res
+      if (array.length === 0) {
+        return res
           .status(400)
           .send({ msg: "400 Bad Request: article does not exist" });
-      return res.status(200).send(array[0]);
+      } else return res.status(200).send(array[0]);
     })
     .catch((err) => {
       next(err);

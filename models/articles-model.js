@@ -11,17 +11,41 @@ exports.selectArticle = (articleId) => {
     .groupBy("articles.article_id");
 };
 
-exports.selectAllArticles = (sortby, ascordesc) => {
+exports.selectAllArticles = (sortby, ascordesc, author) => {
   console.log("inside selectAllArticles");
   console.log(sortby);
-  return knex
-    .select("articles.*")
-    .count("comments.article_id as comment_count")
-    .from("articles")
-    .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
-    .groupBy("articles.article_id")
-    .orderBy(sortby || "created_at", ascordesc || "desc");
+  if (!sortby) {
+    return knex
+      .select("articles.*")
+      .count("comments.article_id as comment_count")
+      .from("articles")
+      .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
+      .groupBy("articles.article_id")
+      .orderBy(sortby || "created_at", ascordesc || "desc")
+      .modify((query) => {
+        if (author) query.where("author", author);
+      });
+  } else if (ascordesc !== "asc" || ascordesc !== "desc") {
+    return Promise.reject({
+      status: 422,
+      msg: "422 Unprocessable Entity - sort_by or order request does not exist",
+    });
+  } else {
+    return knex
+      .select("articles.*")
+      .count("comments.article_id as comment_count")
+      .from("articles")
+      .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
+      .groupBy("articles.article_id")
+      .orderBy(sortby || "created_at", ascordesc || "desc")
+      .modify((query) => {
+        if (author) query.where("author", author);
+      });
+  }
 };
+/*.modify((query) => {
+   if (author) query.where('author', author); // if author exists, will create a .where("author", author). Need author paramter at the top
+ }) */
 
 exports.selectArticlesByQuery = (user = {}, top = {}, sortby, ascordesc) => {
   console.log("inside selectArticlesByQuery in articles model");

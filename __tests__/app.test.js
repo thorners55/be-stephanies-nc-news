@@ -435,115 +435,169 @@ describe("app", () => {
           });
       });
     });
-  });
-  describe.only("GET", () => {
-    test("status 200: responds with object with property articles ", () => {
-      return request(app)
-        .get("/api/articles")
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body);
-          expect(body).toHaveProperty("articles");
-        });
-    });
-    test("status 200: response object has an array of objects", () => {
-      return request(app)
-        .get("/api/articles")
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body);
-          const testingProperties = body.articles.filter((object) => {
-            return object === Object(object);
+    describe("PATCH /api/comments/:comment_id", () => {
+      test("status 200: responds with an object with property comment, value is an object", () => {
+        return request(app)
+          .post("/api/articles/1/comments")
+          .send({ username: "butter_bridge", body: "This is a comment" })
+          .then(({ body }) => {
+            console.log(body);
+          })
+          .then(() => {
+            return request(app)
+              .patch("/api/comments/19")
+              .send({ inc_votes: 5 })
+              .expect(200);
+          })
+          .then(({ body }) => {
+            console.log(body);
+            //CONTINUE WRITING TESTS HERE
           });
-          expect(testingProperties.length).toBe(12);
-        });
+      });
     });
-    test("status 200: response object array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
-      return request(app)
-        .get("/api/articles")
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body);
-          body.articles.forEach((article) => {
-            expect(article).toHaveProperty("author");
-            expect(article).toHaveProperty("title");
-            expect(article).toHaveProperty("article_id");
-            expect(article).toHaveProperty("topic");
-            expect(article).toHaveProperty("title");
-            expect(article).toHaveProperty("created_at");
-            expect(article).toHaveProperty("votes");
-            expect(article).toHaveProperty("comment_count");
+    xdescribe("GET /api/articles", () => {
+      test("status 200: responds with object with property articles ", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            expect(body).toHaveProperty("articles");
           });
-          expect(body.articles.length).toBe(12);
-        });
-    });
+      });
+      test("status 200: response object has an array of objects", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            const testingProperties = body.articles.filter((object) => {
+              return object === Object(object);
+            });
+            expect(testingProperties.length).toBe(12);
+          });
+      });
+      test("status 200: response object array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            body.articles.forEach((article) => {
+              expect(article).toHaveProperty("author");
+              expect(article).toHaveProperty("title");
+              expect(article).toHaveProperty("article_id");
+              expect(article).toHaveProperty("topic");
+              expect(article).toHaveProperty("title");
+              expect(article).toHaveProperty("created_at");
+              expect(article).toHaveProperty("votes");
+              expect(article).toHaveProperty("comment_count");
+            });
+            expect(body.articles.length).toBe(12);
+          });
+      });
 
-    test("status 200: filters by username", () => {
-      return request(app)
-        .get("/api/articles?username=butter_bridge")
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body);
-          const testing = body.articles.forEach((object) => {
-            expect(object.author).toBe("butter_bridge");
+      test("status 200: filters by username", () => {
+        return request(app)
+          .get("/api/articles?username=butter_bridge")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            const testing = body.articles.forEach((object) => {
+              expect(object.author).toBe("butter_bridge");
+            });
+            expect(body.articles.length).not.toBe(0);
           });
-          expect(body.articles.length).not.toBe(0);
+      });
+      test("status 200: filters by topic", () => {
+        return request(app)
+          .get("/api/articles?topic=cats")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            const testing = body.articles.forEach((object) => {
+              expect(object.topic).toBe("cats");
+            });
+            expect(body.articles.length).not.toBe(0);
+          });
+      });
+      test("status 200: articles sorted by date", () => {
+        return request(app)
+          .get("/api/articles")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).toBeSortedBy("created_at", {
+              descending: true,
+            });
+          });
+      });
+      test("status 200: filters by topic or username AND defaults sorting to descending", () => {
+        return request(app)
+          .get("/api/articles?username=rogersop?sort_by=article_id")
+          .expect(200)
+          .then(({ body }) => {
+            const test = body.articles.forEach((object) => {
+              expect(object.username).toBe("rogersop");
+            });
+            expect(body.articles).toBeSortedBy("article_id", {
+              descending: true,
+            });
+          });
+      });
+      test("status 200: filters by topic or username AND sorts by any valid column", () => {
+        return request(app)
+          .get(
+            "/api/articles?username=butter_bridge&sort_by=comment_count&order=asc"
+          )
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body.articles);
+            const convertToInt = body.articles.forEach((object) => {
+              const number = object.comment_count;
+              object.comment_count = parseInt(number);
+              expect(object.author).toBe("butter_bridge");
+            });
+            expect(body.articles).toBeSortedBy("comment_count");
+          });
+      });
+      describe("GET /api/articles Error handling", () => {
+        test("status 422: bad sort_by query request", () => {
+          return request(app)
+            .get("/api/articles?sort_by=porridge")
+            .expect(422)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "422 Unprocessable Entity - sort_by or order request does not exist"
+              );
+            });
         });
-    });
-    test("status 200: filters by topic", () => {
-      return request(app)
-        .get("/api/articles?topic=cats")
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body);
-          const testing = body.articles.forEach((object) => {
-            expect(object.topic).toBe("cats");
-          });
-          expect(body.articles.length).not.toBe(0);
+        test("status 422: bad order query request", () => {
+          return request(app)
+            .get("/api/articles?order=cornflakes")
+            .expect(422)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "422 Unprocessable Entity - sort_by or order request does not exist"
+              );
+            });
         });
-    });
-    test.only("status 200: articles sorted by date", () => {
-      return request(app)
-        .get("/api/articles")
-        .expect(200)
-        .then(({ body }) => {
-          expect(body.articles).toBeSortedBy("created_at", {
-            descending: true,
-          });
+        test("status 422: bad author/topic not in the databsase", () => {
+          return request(app)
+            .get("/api/articles?username=IRUser")
+            .expect(422)
+            .then(({ body }) => {
+              console.log;
+              expect(body.msg).toBe(
+                "422 Unprocessable Entity - sort_by or order request does not exist"
+              );
+            });
         });
-    });
-    test("status 200: filters by topic or username AND defaults sorting to descending", () => {
-      return request(app)
-        .get("/api/articles?username=rogersop?sort_by=article_id")
-        .expect(200)
-        .then(({ body }) => {
-          const test = body.articles.forEach((object) => {
-            expect(object.username).toBe("rogersop");
-          });
-          expect(body.articles).toBeSortedBy("article_id", {
-            descending: true,
-          });
-        });
-    });
-    test("status 200: filters by topic or username AND sorts by any valid column", () => {
-      return request(app)
-        .get(
-          "/api/articles?username=butter_bridge&sort_by=comment_count&order=asc"
-        )
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body.articles);
-          const convertToInt = body.articles.forEach((object) => {
-            const number = object.comment_count;
-            object.comment_count = parseInt(number);
-            expect(object.author).toBe("butter_bridge");
-          });
-          expect(body.articles).toBeSortedBy("comment_count");
-        });
+      });
     });
   });
 });
-
 /* test.only("status 200: filters by username AND topic", () => {
       return request(app)
         .get("/api/articles?username=butter_bridge&topic=mitch&order=asc")
