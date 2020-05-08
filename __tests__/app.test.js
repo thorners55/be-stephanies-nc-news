@@ -100,6 +100,50 @@ describe("app", () => {
     });
     describe("/articles", () => {
       describe("/:article_id", () => {
+        describe("/:article_id/comments", () => {
+          describe.only("GET", () => {
+            test("status 200", () => {
+              return request(app).get("/api/articles/1/comments").expect(200);
+            });
+            test("status 200: returns an object with key comments, value is an array", () => {
+              return request(app)
+                .get("/api/articles/1/comments")
+                .expect(200)
+                .then(({ body }) => {
+                  console.log(body);
+                  expect(Array.isArray(body.comments)).toBe(true);
+                });
+            });
+            test("status 200: each comment (response array element object) has correct properties", () => {
+              return request(app)
+                .get("/api/articles/1/comments")
+                .expect(200)
+                .then(({ body }) => {
+                  const comments = body.comments.forEach((comment) => {
+                    expect(comment).toHaveProperty("comment_id");
+                    expect(comment).toHaveProperty("author");
+                    expect(comment.article_id).toBe(1);
+                    expect(comment).toHaveProperty("votes");
+                    expect(comment).toHaveProperty("body");
+                  });
+                });
+            });
+            test("status 200: comment object values are not null", () => {
+              return request(app)
+                .get("/api/articles/1/comments")
+                .expect(200)
+                .then(({ body }) => {
+                  const comments = body.comments.forEach((comment) => {
+                    expect(comment.article_id).not.toBeFalsy();
+                    expect(comment.author).not.toBeFalsy();
+                    expect(comment.body).not.toBeFalsy();
+                    expect(comment.votes).not.toBe(null);
+                  });
+                });
+            });
+          });
+        });
+
         describe("POST", () => {
           test("status 201: posts a comment", () => {
             return request(app)
@@ -143,6 +187,7 @@ describe("app", () => {
             });
           });
         });
+
         describe("GET", () => {
           test("status 200: responds with relevent article object with a comment count property", () => {
             return request(app)

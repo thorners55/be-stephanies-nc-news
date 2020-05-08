@@ -4,7 +4,10 @@ const {
 } = require("../models/articles-model.js");
 const { handler400 } = require("./errors-controller.js");
 
-const { insertComment } = require("../models/comments-model.js");
+const {
+  insertComment,
+  selectAllCommentsByArticleId,
+} = require("../models/comments-model.js");
 
 exports.getArticle = (req, res, next) => {
   const reqArticleId = parseInt(req.params.article_id);
@@ -41,6 +44,20 @@ exports.patchArticleById = (req, res, next) => {
         next(err);
       });
   }
+};
+
+exports.getComments = (req, res, next) => {
+  console.log("inside getComments in articles controller");
+  const { article_id } = req.params;
+  console.log(article_id);
+  selectAllCommentsByArticleId(article_id)
+    .then((comments) => {
+      console.log("back inside getComments in articles controller");
+      return res.status(200).send({ comments });
+    })
+    .catch((err) => {
+      next(err);
+    });
 };
 
 exports.postComment = (req, res, next) => {
