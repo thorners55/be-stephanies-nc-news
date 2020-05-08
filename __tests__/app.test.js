@@ -436,28 +436,35 @@ describe("app", () => {
       });
     });
   });
-  xdescribe("GET", () => {
-    test("status 200", () => {
-      return request(app).get("/api/articles").expect(200);
-    });
-    xtest("responds with an array of objects", () => {
+  describe.only("GET", () => {
+    test("status 200: responds with object with property articles ", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
-          const testingProperties = body.filter((object) => {
+          console.log(body);
+          expect(body).toHaveProperty("articles");
+        });
+    });
+    test("status 200: response object has an array of objects", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body);
+          const testingProperties = body.articles.filter((object) => {
             return object === Object(object);
           });
-          expect(Array.isArray(body)).toBe(true);
           expect(testingProperties.length).toBe(12);
         });
     });
-    xtest("response array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
+    test("status 200: response object array elements have properties of author, title, article_id, topic, created_at, votes, comment_count ", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
-          body.forEach((article) => {
+          console.log(body);
+          body.articles.forEach((article) => {
             expect(article).toHaveProperty("author");
             expect(article).toHaveProperty("title");
             expect(article).toHaveProperty("article_id");
@@ -467,7 +474,85 @@ describe("app", () => {
             expect(article).toHaveProperty("votes");
             expect(article).toHaveProperty("comment_count");
           });
+          expect(body.articles.length).toBe(12);
+        });
+    });
+
+    test("status 200: filters by username", () => {
+      return request(app)
+        .get("/api/articles?username=butter_bridge")
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body);
+          const testing = body.articles.forEach((object) => {
+            expect(object.author).toBe("butter_bridge");
+          });
+          expect(body.articles.length).not.toBe(0);
+        });
+    });
+    test("status 200: filters by topic", () => {
+      return request(app)
+        .get("/api/articles?topic=cats")
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body);
+          const testing = body.articles.forEach((object) => {
+            expect(object.topic).toBe("cats");
+          });
+          expect(body.articles.length).not.toBe(0);
+        });
+    });
+    test.only("status 200: articles sorted by date", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+    });
+    test("status 200: filters by topic or username AND defaults sorting to descending", () => {
+      return request(app)
+        .get("/api/articles?username=rogersop?sort_by=article_id")
+        .expect(200)
+        .then(({ body }) => {
+          const test = body.articles.forEach((object) => {
+            expect(object.username).toBe("rogersop");
+          });
+          expect(body.articles).toBeSortedBy("article_id", {
+            descending: true,
+          });
+        });
+    });
+    test("status 200: filters by topic or username AND sorts by any valid column", () => {
+      return request(app)
+        .get(
+          "/api/articles?username=butter_bridge&sort_by=comment_count&order=asc"
+        )
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body.articles);
+          const convertToInt = body.articles.forEach((object) => {
+            const number = object.comment_count;
+            object.comment_count = parseInt(number);
+            expect(object.author).toBe("butter_bridge");
+          });
+          expect(body.articles).toBeSortedBy("comment_count");
         });
     });
   });
 });
+
+/* test.only("status 200: filters by username AND topic", () => {
+      return request(app)
+        .get("/api/articles?username=butter_bridge&topic=mitch&order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          console.log(body);
+          const testing = body.articles.forEach((object) => {
+            expect(object.author).toBe("butter_bridge");
+            expect(object.topic).toBe("mitch");
+          });
+        });
+    }); */

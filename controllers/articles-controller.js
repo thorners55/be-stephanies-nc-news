@@ -1,6 +1,8 @@
 const {
   selectArticle,
   updateArticleVotes,
+  selectAllArticles,
+  selectArticlesByQuery,
 } = require("../models/articles-model.js");
 const { handler400 } = require("./errors-controller.js");
 
@@ -8,6 +10,36 @@ const {
   insertComment,
   selectAllCommentsByArticleId,
 } = require("../models/comments-model.js");
+
+exports.getAllArticles = (req, res, next) => {
+  console.log("inside getAllArticles in articles controller");
+  const { username, topic, sort_by, order } = req.query;
+  console.log(req.query.hasOwnProperty("sort_by"));
+
+  if (
+    req.query.hasOwnProperty("username") ||
+    req.query.hasOwnProperty("topic")
+  ) {
+    selectArticlesByQuery(username, topic, sort_by, order)
+      .then((articles) => {
+        console.log("back inside getAllArticles in articles controller");
+        console.log(articles);
+
+        return res.status(200).send({ articles });
+      })
+      .catch((err) => {
+        next(err);
+      });
+  } else {
+    console.log(sort_by);
+    console.log(order);
+    selectAllArticles(sort_by, order).then((articles) => {
+      console.log("back inside selectAllArticles");
+      console.log(articles);
+      return res.status(200).send({ articles });
+    });
+  }
+};
 
 exports.getArticle = (req, res, next) => {
   const reqArticleId = parseInt(req.params.article_id);
@@ -52,7 +84,6 @@ exports.getComments = (req, res, next) => {
   const { sort_by } = req.query;
   const { order } = req.query;
   const reqArticleId = parseInt(article_id);
-  console.log(article_id);
   selectAllCommentsByArticleId(reqArticleId, sort_by, order)
     .then((comments) => {
       console.log("back inside getComments in articles controller");

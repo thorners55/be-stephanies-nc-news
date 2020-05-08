@@ -11,6 +11,43 @@ exports.selectArticle = (articleId) => {
     .groupBy("articles.article_id");
 };
 
+exports.selectAllArticles = (sortby, ascordesc) => {
+  console.log("inside selectAllArticles");
+  console.log(sortby);
+  return knex
+    .select("articles.*")
+    .count("comments.article_id as comment_count")
+    .from("articles")
+    .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
+    .groupBy("articles.article_id")
+    .orderBy(sortby || "created_at", ascordesc || "desc");
+};
+
+exports.selectArticlesByQuery = (user = {}, top = {}, sortby, ascordesc) => {
+  console.log("inside selectArticlesByQuery in articles model");
+  console.log(user);
+  console.log(top);
+  if (Object.entries(user).length === 0 && Object.entries(top) === 0) {
+    return knex
+      .select("articles.*")
+      .count("comments.article_id as comment_count")
+      .from("articles")
+      .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
+      .groupBy("articles.article_id")
+      .orderBy(sortby || "created_at", ascordesc || "desc");
+  } else {
+    return knex
+      .select("articles.*")
+      .count("comments.article_id as comment_count")
+      .from("articles")
+      .where("articles.topic", top)
+      .orWhere("articles.author", user)
+      .leftJoin("comments", "articles.article_id", "=", "comments.article_id")
+      .groupBy("articles.article_id")
+      .orderBy(sortby || "created_at", ascordesc || "desc");
+  }
+};
+
 exports.updateArticleVotes = (articleId, votes) => {
   console.log("inside updateArticleVotes in articles model");
   return knex("articles")
@@ -39,3 +76,7 @@ FROM articles
 WHERE articles.article_id is articleId
 LEFT JOIN comments ON articles.article_id=comments.article_id
 GROUP BY articles.article_id*/
+
+/* .where(function () {
+        this.where("articles.author", user).andWhere("articles.topic", top);
+      }) */
