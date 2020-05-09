@@ -451,10 +451,79 @@ describe("app", () => {
           })
           .then(({ body }) => {
             console.log(body);
-            //CONTINUE WRITING TESTS HERE
+            expect(body).toHaveProperty("comment");
           });
       });
     });
+    test("status 200: response comment object has all comment info with properties of votes updated", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "butter_bridge", body: "This is a comment" })
+        .then(({ body }) => {
+          console.log(body);
+        })
+        .then(() => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: 5 })
+            .expect(200);
+        })
+        .then(({ body }) => {
+          expect(body.comment[0].votes).toBe(5);
+          expect(body.comment[0].comment_id).toBe(19);
+          expect(body.comment[0].author).toBe("butter_bridge");
+          expect(body.comment[0].article_id).toBe(1);
+          expect(body.comment[0]).toHaveProperty("created_at");
+          expect(body.comment[0].body).toBe("This is a comment");
+        });
+    });
+    test("status 200: can update votes property with a negative number", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "butter_bridge", body: "This is a comment" })
+        .then(({ body }) => {
+          console.log(body);
+        })
+        .then(() => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: -3 })
+            .expect(200);
+        })
+        .then(({ body }) => {
+          expect(body.comment[0].votes).toBe(-3);
+        });
+    });
+    test.only("status 200: will increment votes, not update number", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "butter_bridge", body: "This is a comment" })
+        .then(({ body }) => {
+          console.log(body);
+        })
+        .then(() => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: 5 })
+            .expect(200);
+        })
+        .then(() => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: 2 })
+            .expect(200);
+        })
+        .then(() => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: -1 })
+            .expect(200);
+        })
+        .then(({ body }) => {
+          expect(body.comment[0].votes).toBe(6);
+        });
+    });
+
     describe("GET /api/articles", () => {
       test("status 200: responds with object with property articles ", () => {
         return request(app)
@@ -607,15 +676,3 @@ describe("app", () => {
     });
   });
 });
-/* test.only("status 200: filters by username AND topic", () => {
-      return request(app)
-        .get("/api/articles?username=butter_bridge&topic=mitch&order=asc")
-        .expect(200)
-        .then(({ body }) => {
-          console.log(body);
-          const testing = body.articles.forEach((object) => {
-            expect(object.author).toBe("butter_bridge");
-            expect(object.topic).toBe("mitch");
-          });
-        });
-    }); */
