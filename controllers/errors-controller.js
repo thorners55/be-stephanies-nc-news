@@ -1,7 +1,8 @@
 exports.handler404 = (req, res, next) => {
   console.log("inside handler400");
   console.log(req.body);
-  res.status(404).send({ msg: "404 Bad Request: Route not found" });
+
+  res.status(404).send({ msg: "404 Bad Request: Not found" });
   // route would be 404
 };
 
@@ -12,8 +13,8 @@ exports.handler405 = (req, res) => {
 };
 
 exports.handler400 = (req, res) => {
-  console.log("inside handler400)");
-  return res.status(400).send({
+  console.log("inside handler400");
+  res.status(400).send({
     msg: "400 Bad Request: Cannot access information - invalid request",
   });
 };

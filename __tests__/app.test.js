@@ -35,13 +35,13 @@ describe("app", () => {
             });
         });
       });
-      describe("Error handling", () => {
+      describe("GET /api/topics Error handling", () => {
         test("status 404: unsupported /api route", () => {
           return request(app)
             .get("/api/mushrooms")
             .expect(404)
             .then((res) => {
-              expect(res.body.msg).toBe("404 Bad Request: Route not found");
+              expect(res.body.msg).toBe("404 Bad Request: Not found");
             });
         });
         test("status 404: unsupported / route", () => {
@@ -49,7 +49,7 @@ describe("app", () => {
             .get("/mushrooms")
             .expect(404)
             .then((res) => {
-              expect(res.body.msg).toBe("404 Bad Request: Route not found");
+              expect(res.body.msg).toBe("404 Bad Request: Not found");
             });
         });
         test("status 405: unsupported HTTP method", () => {
@@ -79,7 +79,7 @@ describe("app", () => {
             });
         });
       });
-      describe("Error handling", () => {
+      describe("GET /users/:username Error handling", () => {
         test("status 404: request for invalid username", () => {
           return request(app)
             .get("/api/users/userDoesNotExist")
@@ -266,7 +266,7 @@ describe("app", () => {
       });
     });
 
-    describe("POST", () => {
+    describe("POST /api/articles/:article_id/comments", () => {
       test("status 201: posts a comment", () => {
         return request(app)
           .post("/api/articles/1/comments")
@@ -308,7 +308,7 @@ describe("app", () => {
       });
     });
 
-    describe("GET", () => {
+    describe("GET /api/articles:article_id", () => {
       test("status 200: responds with relevent article object with a comment count property", () => {
         return request(app)
           .get("/api/articles/1")
@@ -338,7 +338,7 @@ describe("app", () => {
           });
       });
     });
-    describe("PATCH", () => {
+    describe("PATCH /api/articles/:article_id", () => {
       test("status 200: responds with an object with property article, value is an object", () => {
         return request(app)
           .patch("/api/articles/2")
@@ -371,6 +371,144 @@ describe("app", () => {
             expect(body.article[0].article_id).toBe(4);
           });
       });
+      describe("PATCH /api/comments/:comment_id", () => {
+        test("status 200: responds with an object with property comment, value is an object", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge", body: "This is a comment" })
+            .then(({ body }) => {
+              console.log(body);
+            })
+            .then(() => {
+              return request(app)
+                .patch("/api/comments/19")
+                .send({ inc_votes: 5 })
+                .expect(200);
+            })
+            .then(({ body }) => {
+              console.log(body);
+              expect(body).toHaveProperty("comment");
+            });
+        });
+        test("status 200: response comment object has all comment info with properties of votes updated", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge", body: "This is a comment" })
+            .then(({ body }) => {
+              console.log(body);
+            })
+            .then(() => {
+              return request(app)
+                .patch("/api/comments/19")
+                .send({ inc_votes: 5 })
+                .expect(200);
+            })
+            .then(({ body }) => {
+              expect(body.comment[0].votes).toBe(5);
+              expect(body.comment[0].comment_id).toBe(19);
+              expect(body.comment[0].author).toBe("butter_bridge");
+              expect(body.comment[0].article_id).toBe(1);
+              expect(body.comment[0]).toHaveProperty("created_at");
+              expect(body.comment[0].body).toBe("This is a comment");
+            });
+        });
+        test("status 200: can update votes property with a negative number", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge", body: "This is a comment" })
+            .then(({ body }) => {
+              console.log(body);
+            })
+            .then(() => {
+              return request(app)
+                .patch("/api/comments/19")
+                .send({ inc_votes: -3 })
+                .expect(200);
+            })
+            .then(({ body }) => {
+              expect(body.comment[0].votes).toBe(-3);
+            });
+        });
+        test("status 200: will increment votes, not update number", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge", body: "This is a comment" })
+            .then(({ body }) => {
+              console.log(body);
+            })
+            .then(() => {
+              return request(app)
+                .patch("/api/comments/19")
+                .send({ inc_votes: 5 })
+                .expect(200);
+            })
+            .then(() => {
+              return request(app)
+                .patch("/api/comments/19")
+                .send({ inc_votes: 2 })
+                .expect(200);
+            })
+            .then(() => {
+              return request(app)
+                .patch("/api/comments/19")
+                .send({ inc_votes: -1 })
+                .expect(200);
+            })
+            .then(({ body }) => {
+              expect(body.comment[0].votes).toBe(6);
+            });
+        });
+      });
+      describe("PATCH /api/comments/:comment_id Error handling", () => {
+        test.todo("status 405: unsupported HTTP method");
+        test("status 400: Bad request - no inc_votes on request body", () => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({})
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "400 Bad Request: Cannot access information - invalid request"
+              );
+            });
+        });
+        test("status 400: invalid request - invalid inc_votes value", () => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: "cat" })
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "400 Bad Request: Cannot access information - invalid request"
+              );
+            });
+        });
+        test("status 400: invalid request - invalid property on request body", () => {
+          return request(app)
+            .patch("/api/comments/19")
+            .send({ inc_votes: 1, name: "Stephanie" })
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe(
+                "400 Bad Request: Cannot access information - invalid request"
+              );
+            });
+        });
+        test("status 404: comment not found", () => {
+          return request(app)
+            .patch("/api/comments/425")
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe("404 Bad Request: Not found");
+            });
+        });
+      });
+
       describe("PATCH /api/articles/:article_id Error handling", () => {
         test("status 400: Bad request - no inc_votes on request body", () => {
           return request(app)
@@ -379,6 +517,9 @@ describe("app", () => {
             .expect(400)
             .then(({ body }) => {
               console.log(body);
+              expect(body.msg).toBe(
+                "400 Bad Request: Cannot access information - invalid request"
+              );
             });
         });
         test("status 400: invalid request - invalid inc_votes value", () => {
@@ -435,96 +576,8 @@ describe("app", () => {
           });
       });
     });
-    describe("PATCH /api/comments/:comment_id", () => {
-      test("status 200: responds with an object with property comment, value is an object", () => {
-        return request(app)
-          .post("/api/articles/1/comments")
-          .send({ username: "butter_bridge", body: "This is a comment" })
-          .then(({ body }) => {
-            console.log(body);
-          })
-          .then(() => {
-            return request(app)
-              .patch("/api/comments/19")
-              .send({ inc_votes: 5 })
-              .expect(200);
-          })
-          .then(({ body }) => {
-            console.log(body);
-            expect(body).toHaveProperty("comment");
-          });
-      });
-    });
-    test("status 200: response comment object has all comment info with properties of votes updated", () => {
-      return request(app)
-        .post("/api/articles/1/comments")
-        .send({ username: "butter_bridge", body: "This is a comment" })
-        .then(({ body }) => {
-          console.log(body);
-        })
-        .then(() => {
-          return request(app)
-            .patch("/api/comments/19")
-            .send({ inc_votes: 5 })
-            .expect(200);
-        })
-        .then(({ body }) => {
-          expect(body.comment[0].votes).toBe(5);
-          expect(body.comment[0].comment_id).toBe(19);
-          expect(body.comment[0].author).toBe("butter_bridge");
-          expect(body.comment[0].article_id).toBe(1);
-          expect(body.comment[0]).toHaveProperty("created_at");
-          expect(body.comment[0].body).toBe("This is a comment");
-        });
-    });
-    test("status 200: can update votes property with a negative number", () => {
-      return request(app)
-        .post("/api/articles/1/comments")
-        .send({ username: "butter_bridge", body: "This is a comment" })
-        .then(({ body }) => {
-          console.log(body);
-        })
-        .then(() => {
-          return request(app)
-            .patch("/api/comments/19")
-            .send({ inc_votes: -3 })
-            .expect(200);
-        })
-        .then(({ body }) => {
-          expect(body.comment[0].votes).toBe(-3);
-        });
-    });
-    test.only("status 200: will increment votes, not update number", () => {
-      return request(app)
-        .post("/api/articles/1/comments")
-        .send({ username: "butter_bridge", body: "This is a comment" })
-        .then(({ body }) => {
-          console.log(body);
-        })
-        .then(() => {
-          return request(app)
-            .patch("/api/comments/19")
-            .send({ inc_votes: 5 })
-            .expect(200);
-        })
-        .then(() => {
-          return request(app)
-            .patch("/api/comments/19")
-            .send({ inc_votes: 2 })
-            .expect(200);
-        })
-        .then(() => {
-          return request(app)
-            .patch("/api/comments/19")
-            .send({ inc_votes: -1 })
-            .expect(200);
-        })
-        .then(({ body }) => {
-          expect(body.comment[0].votes).toBe(6);
-        });
-    });
 
-    describe("GET /api/articles", () => {
+    describe.only("GET /api/articles", () => {
       test("status 200: responds with object with property articles ", () => {
         return request(app)
           .get("/api/articles")

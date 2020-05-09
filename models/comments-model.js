@@ -53,6 +53,7 @@ exports.insertComment = (articleId, username, body) => {
 
 exports.updateCommentVotes = (commentId, votes) => {
   console.log("inside updateCommentVotes in comments model");
+  console.log(commentId, votes);
   return knex("comments")
     .increment("votes", votes)
     .where("comment_id", commentId)
