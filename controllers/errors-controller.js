@@ -18,6 +18,22 @@ exports.handler400 = (req, res) => {
   });
 };
 
+exports.handler422 = (req, res) => {
+  console.log("inside handler 422");
+  const { query } = req;
+  reqQueryKeys = Object.keys(query);
+  if (reqQueryKeys.includes("author" || "topic")) {
+    return res.status(422).send({
+      status: 422,
+      msg: "422 Unprocessable Entity - author or topic does not exist",
+    });
+  } else
+    return res.status(422).send({
+      status: 422,
+      msg: "422 Unprocessable Entity - sort_by or order request invalid",
+    });
+};
+
 exports.handlePSQLErrors = (err, req, res, next) => {
   console.log({ err }, " <--");
   const { status, msg } = err;
@@ -32,7 +48,7 @@ exports.handlePSQLErrors = (err, req, res, next) => {
     },
     "42703": {
       status: 422,
-      msg: "422 Unprocessable Entity - sort_by or order request does not exist",
+      msg: "422 Unprocessable Entity - sort_by or order request invalid",
     },
   };
   console.log(err.status);

@@ -248,7 +248,7 @@ describe("app", () => {
               .then(({ body }) => {
                 console.log(body);
                 expect(body.msg).toBe(
-                  "422 Unprocessable Entity - sort_by or order request does not exist"
+                  "422 Unprocessable Entity - sort_by or order request invalid"
                 );
               });
           });
@@ -258,7 +258,7 @@ describe("app", () => {
               .expect(422)
               .then(({ body }) => {
                 expect(body.msg).toBe(
-                  "422 Unprocessable Entity - sort_by or order request does not exist"
+                  "422 Unprocessable Entity - sort_by or order request invalid"
                 );
               });
           });
@@ -455,7 +455,7 @@ describe("app", () => {
           });
       });
     });
-    xdescribe("GET /api/articles", () => {
+    describe("GET /api/articles", () => {
       test("status 200: responds with object with property articles ", () => {
         return request(app)
           .get("/api/articles")
@@ -470,7 +470,6 @@ describe("app", () => {
           .get("/api/articles")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             const testingProperties = body.articles.filter((object) => {
               return object === Object(object);
             });
@@ -497,9 +496,9 @@ describe("app", () => {
           });
       });
 
-      test("status 200: filters by username", () => {
+      test("status 200: filters by author", () => {
         return request(app)
-          .get("/api/articles?username=butter_bridge")
+          .get("/api/articles?author=butter_bridge")
           .expect(200)
           .then(({ body }) => {
             console.log(body);
@@ -521,7 +520,7 @@ describe("app", () => {
             expect(body.articles.length).not.toBe(0);
           });
       });
-      test("status 200: articles sorted by date", () => {
+      test("status 200: articles sorted by date by default", () => {
         return request(app)
           .get("/api/articles")
           .expect(200)
@@ -531,33 +530,34 @@ describe("app", () => {
             });
           });
       });
-      test("status 200: filters by topic or username AND defaults sorting to descending", () => {
+      test("status 200: orders by asc query if passed", () => {
         return request(app)
-          .get("/api/articles?username=rogersop?sort_by=article_id")
+          .get("/api/articles?order=asc")
           .expect(200)
           .then(({ body }) => {
-            const test = body.articles.forEach((object) => {
-              expect(object.username).toBe("rogersop");
-            });
-            expect(body.articles).toBeSortedBy("article_id", {
-              descending: true,
-            });
+            expect(body.articles).toBeSortedBy("created_at");
           });
       });
-      test("status 200: filters by topic or username AND sorts by any valid column", () => {
+      test("status 200: filters by topic OR author AND sorts by any valid column", () => {
         return request(app)
-          .get(
-            "/api/articles?username=butter_bridge&sort_by=comment_count&order=asc"
-          )
+          .get("/api/articles?author=rogersop&sort_by=comment_count&order=asc")
           .expect(200)
           .then(({ body }) => {
             console.log(body.articles);
             const convertToInt = body.articles.forEach((object) => {
               const number = object.comment_count;
               object.comment_count = parseInt(number);
-              expect(object.author).toBe("butter_bridge");
+              expect(object.author).toBe("rogersop");
             });
             expect(body.articles).toBeSortedBy("comment_count");
+          });
+      });
+      test("status 200: filters by topic OR author AND sorts by any valid column AND orders by query", () => {
+        return request(app)
+          .get("/api/articles?topic=mitch&sort_by=article_id&order=asc")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body.articles).toBeSortedBy("article_id");
           });
       });
       describe("GET /api/articles Error handling", () => {
@@ -568,7 +568,7 @@ describe("app", () => {
             .then(({ body }) => {
               console.log(body);
               expect(body.msg).toBe(
-                "422 Unprocessable Entity - sort_by or order request does not exist"
+                "422 Unprocessable Entity - sort_by or order request invalid"
               );
             });
         });
@@ -579,19 +579,28 @@ describe("app", () => {
             .then(({ body }) => {
               console.log(body);
               expect(body.msg).toBe(
-                "422 Unprocessable Entity - sort_by or order request does not exist"
+                "422 Unprocessable Entity - sort_by or order request invalid"
               );
             });
         });
         test("status 422: bad author/topic not in the databsase", () => {
           return request(app)
-            .get("/api/articles?username=IRUser")
+            .get("/api/articles?author=IRUser")
             .expect(422)
             .then(({ body }) => {
               console.log;
               expect(body.msg).toBe(
-                "422 Unprocessable Entity - sort_by or order request does not exist"
+                "422 Unprocessable Entity - author or topic does not exist"
               );
+            });
+        });
+        test("status 405: unsupported HTTP method", () => {
+          return request(app)
+            .post("/api/articles")
+            .expect(405)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
             });
         });
       });

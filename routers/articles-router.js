@@ -9,7 +9,7 @@ const {
 } = require("../controllers/articles-controller.js");
 const { handler405 } = require("../controllers/errors-controller.js");
 
-articlesRouter.route("/").get(getAllArticles);
+articlesRouter.route("/").get(getAllArticles).all(handler405);
 
 articlesRouter
   .route("/:article_id")

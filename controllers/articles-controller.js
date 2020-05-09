@@ -4,7 +4,7 @@ const {
   selectAllArticles,
   selectArticlesByQuery,
 } = require("../models/articles-model.js");
-const { handler400 } = require("./errors-controller.js");
+const { handler400, handler422 } = require("./errors-controller.js");
 
 const {
   insertComment,
@@ -13,41 +13,22 @@ const {
 
 exports.getAllArticles = (req, res, next) => {
   console.log("inside getAllArticles in articles controller");
-  const { username, topic, sort_by, order } = req.query;
-  console.log(req.query.hasOwnProperty("sort_by"));
-
-  if (
-    req.query.hasOwnProperty("username") ||
-    req.query.hasOwnProperty("topic")
-  ) {
-    selectArticlesByQuery(username, topic, sort_by, order)
+  const { author, topic, order, sort_by } = req.query;
+  console.log(order, { order }, sort_by, { sort_by });
+  console.log(order !== undefined);
+  const validOrder = ["asc", "desc", undefined];
+  if (validOrder.includes(order)) {
+    selectAllArticles({ author, topic }, sort_by, order)
       .then((articles) => {
         console.log("back inside getAllArticles in articles controller");
         console.log(articles);
-        if (articles.length === 0) {
-          return res.status(422).send({
-            status: 422,
-            msg:
-              "422 Unprocessable Entity - sort_by or order request does not exist",
-          });
-        } else return res.status(200).send({ articles });
+        if (articles.length === 0) handler422(req, res);
+        else return res.status(200).send({ articles });
       })
       .catch((err) => {
         next(err);
       });
-  } else {
-    console.log(sort_by);
-    console.log(order);
-    selectAllArticles(sort_by, order, { username })
-      .then((articles) => {
-        console.log("back inside selectAllArticles");
-        console.log(articles);
-        return res.status(200).send({ articles });
-      })
-      .catch((err) => {
-        next(err);
-      });
-  }
+  } else handler422(req, res);
 };
 
 exports.getArticle = (req, res, next) => {
