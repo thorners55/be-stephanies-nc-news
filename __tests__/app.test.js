@@ -508,6 +508,11 @@ describe("app", () => {
             });
         });
       });
+      describe.only("DELETE /api/comments/:comment_id", () => {
+        test("status 204", () => {
+          return request(app).delete("/api/comments/2").expect(204);
+        });
+      });
 
       describe("PATCH /api/articles/:article_id Error handling", () => {
         test("status 400: Bad request - no inc_votes on request body", () => {
@@ -577,7 +582,7 @@ describe("app", () => {
       });
     });
 
-    describe.only("GET /api/articles", () => {
+    describe("GET /api/articles", () => {
       test("status 200: responds with object with property articles ", () => {
         return request(app)
           .get("/api/articles")

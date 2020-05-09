@@ -60,6 +60,12 @@ exports.updateCommentVotes = (commentId, votes) => {
     .returning("*");
 };
 
+exports.removeComment = (commentId) => {
+  console.log("inside removeComment in comments model");
+  console.log(commentId);
+  return knex("comments").where("comment_id", commentId).delete();
+};
+
 /*   return knex("comments")
     .count("article_id as comment_count")
     .where("article_id", articleId);*/
