@@ -460,7 +460,15 @@ describe("app", () => {
         });
       });
       describe("PATCH /api/comments/:comment_id Error handling", () => {
-        test.todo("status 405: unsupported HTTP method");
+        test.only("status 405: unsupported HTTP method", () => {
+          return request(app)
+            .get("/api/comments/3")
+            .expect(405)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
+            });
+        });
         test("status 400: Bad request - no inc_votes on request body", () => {
           return request(app)
             .patch("/api/comments/19")
@@ -508,9 +516,17 @@ describe("app", () => {
             });
         });
       });
-      describe.only("DELETE /api/comments/:comment_id", () => {
+      describe("DELETE /api/comments/:comment_id", () => {
         test("status 204", () => {
           return request(app).delete("/api/comments/2").expect(204);
+        });
+      });
+      describe("DELETE /api/comments/:comment_id Error handling", () => {
+        test("status 404: valid comment_id but does not exist", () => {
+          return request(app).delete("/api/comments/8000").expect(404);
+        });
+        test("status 400: invalid comment_id", () => {
+          return request(app).delete("/api/comments/marmalade").expect(400);
         });
       });
 

@@ -37,9 +37,13 @@ exports.deleteCommentById = (req, res, next) => {
   console.log(req.params);
   const { comment_id } = req.params;
   const commentId = parseInt(comment_id);
-  removeComment(commentId).then((deleteCount) => {
-    console.log(deleteCount);
-    if (deleteCount === 0) handler404(req, res);
-    else return res.status(204).send();
-  });
+  removeComment(commentId)
+    .then((deleteCount) => {
+      console.log(deleteCount);
+      if (deleteCount === 0) handler404(req, res);
+      else return res.status(204).send();
+    })
+    .catch((err) => {
+      next(err);
+    });
 };
