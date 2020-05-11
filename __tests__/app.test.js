@@ -85,7 +85,7 @@ describe("app", () => {
             .get("/api/users/userDoesNotExist")
             .expect(404)
             .then(({ body }) => {
-              expect(body.msg).toBe("404 Bad Request: username does not exist");
+              expect(body.msg).toBe("Username not found");
             });
         });
         test("status 405: unsupported HTTP method", () => {
@@ -102,8 +102,14 @@ describe("app", () => {
       describe("/:article_id", () => {
         describe("/:article_id/comments", () => {
           describe("GET", () => {
-            test("status 200", () => {
-              return request(app).get("/api/articles/1/comments").expect(200);
+            test("status 200: article exists but has no comments", () => {
+              return request(app)
+                .get("/api/articles/2/comments")
+                .expect(200)
+                .then(({ body }) => {
+                  console.log(body);
+                  expect(body.comments).toEqual([]);
+                });
             });
             test("status 200: returns an object with key comments, value is an array", () => {
               return request(app)
@@ -185,15 +191,7 @@ describe("app", () => {
                   });
                 });
             });
-            test("status 404: QUERY - if no comments, responds 'no comments found'", () => {
-              return request(app)
-                .get("/api/articles/2/comments?sort_by=comment_id")
-                .expect(404)
-                .then(({ body }) => {
-                  console.log(body);
-                  expect(body.msg).toBe("No comments found");
-                });
-            });
+
             test("status 200: QUERY - accepts sort_by AND order request", () => {
               return request(app)
                 .get("/api/articles/1/comments?sort_by=comment_id&order=asc")
@@ -244,22 +242,18 @@ describe("app", () => {
           test("status 400: sort_by query does not exist", () => {
             return request(app)
               .get("/api/articles/1/comments?sort_by=toast")
-              .expect(422)
+              .expect(400)
               .then(({ body }) => {
                 console.log(body);
-                expect(body.msg).toBe(
-                  "422 Unprocessable Entity - sort_by or order request invalid"
-                );
+                expect(body.msg).toBe("sort_by or order request invalid");
               });
           });
           test("status 422: order query does not exist", () => {
             return request(app)
               .get("/api/articles/1/comments/?sort_by=beans")
-              .expect(422)
+              .expect(400)
               .then(({ body }) => {
-                expect(body.msg).toBe(
-                  "422 Unprocessable Entity - sort_by or order request invalid"
-                );
+                expect(body.msg).toBe("sort_by or order request invalid");
               });
           });
         });
@@ -305,18 +299,36 @@ describe("app", () => {
               expect(body.msg).toBe("username not found");
             });
         });
+        test("status 400: POST request does not included all required keys", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send({ username: "butter_bridge" })
+            .expect(400)
+            .then(({ body }) => {
+              console.log(body);
+              expect(body.msg).toBe("request must include username and body");
+              /* return request(app)
+            .post("/api/articles/50000/comments")
+            .send({ username: "IRUser", body: "This is a comment" })
+            .expect(422)
+            .then(({ body }) => {
+              expect(body.msg).toBe("username not found");
+            }); */
+            });
+        });
       });
     });
 
-    describe("GET /api/articles:article_id", () => {
+    describe("GET /api/articles/:article_id", () => {
       test("status 200: responds with relevent article object with a comment count property", () => {
         return request(app)
           .get("/api/articles/1")
           .expect(200)
           .then(({ body }) => {
-            expect(body.article_id).toBe(1);
-            expect(body).toHaveProperty("comment_count");
-            expect(body).toEqual({
+            console.log(body);
+            expect(body.article.article_id).toBe(1);
+            expect(body.article).toHaveProperty("comment_count");
+            expect(body.article).toEqual({
               article_id: 1,
               title: "Living in the shadow of a great man",
               body: "I find this existence challenging",
@@ -333,8 +345,8 @@ describe("app", () => {
           .get("/api/articles/2")
           .expect(200)
           .then(({ body }) => {
-            expect(body.article_id).toBe(2);
-            expect(body.comment_count).toBe("0");
+            expect(body.article.article_id).toBe(2);
+            expect(body.article.comment_count).toBe("0");
           });
       });
     });
@@ -346,8 +358,8 @@ describe("app", () => {
           .expect(200)
           .then(({ body }) => {
             console.log(body);
-            expect(Array.isArray(body.article)).toBe(true);
-            expect(body.article[0]).toHaveProperty("article_id");
+
+            expect(body.article).toHaveProperty("article_id");
           });
       });
       test("status 200: update votes on an article", () => {
@@ -357,8 +369,8 @@ describe("app", () => {
           .expect(200)
           .then(({ body }) => {
             console.log(body);
-            expect(body.article[0].votes).toBe(5);
-            expect(body.article[0].article_id).toBe(2);
+            expect(body.article.votes).toBe(5);
+            expect(body.article.article_id).toBe(2);
           });
       });
       test("status 200: update votes by negative number on an article", () => {
@@ -367,8 +379,8 @@ describe("app", () => {
           .send({ inc_votes: -5 })
           .expect(200)
           .then(({ body }) => {
-            expect(body.article[0].votes).toBe(-5);
-            expect(body.article[0].article_id).toBe(4);
+            expect(body.article.votes).toBe(-5);
+            expect(body.article.article_id).toBe(4);
           });
       });
       describe("PATCH /api/comments/:comment_id", () => {
@@ -404,12 +416,12 @@ describe("app", () => {
                 .expect(200);
             })
             .then(({ body }) => {
-              expect(body.comment[0].votes).toBe(5);
-              expect(body.comment[0].comment_id).toBe(19);
-              expect(body.comment[0].author).toBe("butter_bridge");
-              expect(body.comment[0].article_id).toBe(1);
-              expect(body.comment[0]).toHaveProperty("created_at");
-              expect(body.comment[0].body).toBe("This is a comment");
+              expect(body.comment.votes).toBe(5);
+              expect(body.comment.comment_id).toBe(19);
+              expect(body.comment.author).toBe("butter_bridge");
+              expect(body.comment.article_id).toBe(1);
+              expect(body.comment).toHaveProperty("created_at");
+              expect(body.comment.body).toBe("This is a comment");
             });
         });
         test("status 200: can update votes property with a negative number", () => {
@@ -426,7 +438,7 @@ describe("app", () => {
                 .expect(200);
             })
             .then(({ body }) => {
-              expect(body.comment[0].votes).toBe(-3);
+              expect(body.comment.votes).toBe(-3);
             });
         });
         test("status 200: will increment votes, not update number", () => {
@@ -455,12 +467,12 @@ describe("app", () => {
                 .expect(200);
             })
             .then(({ body }) => {
-              expect(body.comment[0].votes).toBe(6);
+              expect(body.comment.votes).toBe(6);
             });
         });
       });
       describe("PATCH /api/comments/:comment_id Error handling", () => {
-        test.only("status 405: unsupported HTTP method", () => {
+        test("status 405: unsupported HTTP method", () => {
           return request(app)
             .get("/api/comments/3")
             .expect(405)
@@ -469,21 +481,20 @@ describe("app", () => {
               expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
             });
         });
-        test("status 400: Bad request - no inc_votes on request body", () => {
+        test("status 200:  no inc_votes on request body, returns unchanged comment", () => {
           return request(app)
-            .patch("/api/comments/19")
+            .patch("/api/comments/1")
             .send({})
-            .expect(400)
+            .expect(200)
             .then(({ body }) => {
               console.log(body);
-              expect(body.msg).toBe(
-                "400 Bad Request: Cannot access information - invalid request"
-              );
+              expect(body.comment.comment_id).toBe(1);
+              expect(body.comment.votes).toBe(16);
             });
         });
         test("status 400: invalid request - invalid inc_votes value", () => {
           return request(app)
-            .patch("/api/comments/19")
+            .patch("/api/comments/1")
             .send({ inc_votes: "cat" })
             .expect(400)
             .then(({ body }) => {
@@ -493,16 +504,14 @@ describe("app", () => {
               );
             });
         });
-        test("status 400: invalid request - invalid property on request body", () => {
+        test("status 200: updates votes even if extra invalid property on request body", () => {
           return request(app)
-            .patch("/api/comments/19")
+            .patch("/api/comments/1")
             .send({ inc_votes: 1, name: "Stephanie" })
-            .expect(400)
+            .expect(200)
             .then(({ body }) => {
               console.log(body);
-              expect(body.msg).toBe(
-                "400 Bad Request: Cannot access information - invalid request"
-              );
+              expect(body.comment.votes).toBe(17);
             });
         });
         test("status 404: comment not found", () => {
@@ -512,7 +521,7 @@ describe("app", () => {
             .expect(404)
             .then(({ body }) => {
               console.log(body);
-              expect(body.msg).toBe("404 Bad Request: Not found");
+              expect(body.msg).toBe("comment not found");
             });
         });
       });
@@ -531,16 +540,15 @@ describe("app", () => {
       });
 
       describe("PATCH /api/articles/:article_id Error handling", () => {
-        test("status 400: Bad request - no inc_votes on request body", () => {
+        test("status 200: ignores no inc_votes on request body and sends back unchanged article", () => {
           return request(app)
             .patch("/api/articles/1")
             .send({})
-            .expect(400)
+            .expect(200)
             .then(({ body }) => {
+              expect(body.article.votes).toBe(100);
+              expect(body.article.article_id).toBe(1);
               console.log(body);
-              expect(body.msg).toBe(
-                "400 Bad Request: Cannot access information - invalid request"
-              );
             });
         });
         test("status 400: invalid request - invalid inc_votes value", () => {
@@ -555,16 +563,15 @@ describe("app", () => {
               );
             });
         });
-        test("status 400: invalid request - invalid property on request body", () => {
+        test("status 400: invalid request - ignores invalid property on request body and returns article object", () => {
           return request(app)
             .patch("/api/articles/1")
             .send({ inc_votes: 1, name: "Stephanie" })
-            .expect(400)
+            .expect(200)
             .then(({ body }) => {
               console.log(body);
-              expect(body.msg).toBe(
-                "400 Bad Request: Cannot access information - invalid request"
-              );
+              expect(body.article.article_id).toBe(1);
+              expect(body.article.votes).toBe(101);
             });
         });
       });
@@ -573,9 +580,9 @@ describe("app", () => {
       test("status 400: article_id requested does not exist", () => {
         return request(app)
           .get("/api/articles/666")
-          .expect(400)
+          .expect(404)
           .then(({ body }) => {
-            expect(body.msg).toBe("400 Bad Request: article does not exist");
+            expect(body.msg).toBe("Article not found");
           });
       });
       test("status 400: bad article_id", () => {
@@ -645,12 +652,13 @@ describe("app", () => {
           .expect(200)
           .then(({ body }) => {
             console.log(body);
-            const testing = body.articles.forEach((object) => {
+            body.articles.forEach((object) => {
               expect(object.author).toBe("butter_bridge");
             });
             expect(body.articles.length).not.toBe(0);
           });
       });
+
       test("status 200: filters by topic", () => {
         return request(app)
           .get("/api/articles?topic=cats")
@@ -681,6 +689,7 @@ describe("app", () => {
             expect(body.articles).toBeSortedBy("created_at");
           });
       });
+
       test("status 200: filters by topic OR author AND sorts by any valid column", () => {
         return request(app)
           .get("/api/articles?author=rogersop&sort_by=comment_count&order=asc")
@@ -703,38 +712,59 @@ describe("app", () => {
             expect(body.articles).toBeSortedBy("article_id");
           });
       });
+      test("status 200: user exists but is not an author of anything", () => {
+        return request(app)
+          .get("/api/articles?author=lurker")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            expect(body.articles).toEqual([]);
+          });
+      });
+      test("status 200: topic exists but are no articles with this topic", () => {
+        return request(app)
+          .get("/api/articles?topic=paper")
+          .expect(200)
+          .then(({ body }) => {
+            console.log(body);
+            expect(body.articles).toEqual([]);
+          });
+      });
       describe("GET /api/articles Error handling", () => {
-        test("status 422: bad sort_by query request", () => {
+        test("status 400: bad sort_by query request", () => {
           return request(app)
             .get("/api/articles?sort_by=porridge")
-            .expect(422)
+            .expect(400)
             .then(({ body }) => {
               console.log(body);
-              expect(body.msg).toBe(
-                "422 Unprocessable Entity - sort_by or order request invalid"
-              );
+              expect(body.msg).toBe("sort_by or order request invalid");
             });
         });
-        test("status 422: bad order query request", () => {
+        test("status 400: bad order query request", () => {
           return request(app)
             .get("/api/articles?order=cornflakes")
-            .expect(422)
+            .expect(400)
             .then(({ body }) => {
               console.log(body);
-              expect(body.msg).toBe(
-                "422 Unprocessable Entity - sort_by or order request invalid"
-              );
+              expect(body.msg).toBe("Invalid order query");
             });
         });
-        test("status 422: bad author/topic not in the databsase", () => {
+        test("status 404: bad author/topic not in the databsase", () => {
           return request(app)
             .get("/api/articles?author=IRUser")
-            .expect(422)
+            .expect(404)
             .then(({ body }) => {
               console.log;
-              expect(body.msg).toBe(
-                "422 Unprocessable Entity - author or topic does not exist"
-              );
+              expect(body.msg).toBe("Username not found");
+            });
+        });
+        test("status: 404 article not found", () => {
+          return request(app)
+            .get("/api/articles/1000")
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).toBe("Article not found");
+              console.log(body);
             });
         });
         test("status 405: unsupported HTTP method", () => {

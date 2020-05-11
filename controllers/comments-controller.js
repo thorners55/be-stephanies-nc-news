@@ -12,24 +12,17 @@ exports.patchCommentById = (req, res, next) => {
   console.log("inside patchCommentById in comments controller");
   console.log(req.params);
   console.log(req.body);
-  const incVotes = parseInt(req.body.inc_votes);
-  const reqCommentId = parseInt(req.params.comment_id);
-  const reqKeys = Object.keys(req.body);
-  console.log(reqKeys);
-  if (reqKeys.length > 1) handler400(req, res);
-  else
-    updateCommentVotes(reqCommentId, incVotes)
-      .then((comment) => {
-        console.log(comment);
-        if (comment.length === 0) handler404(req, res);
-        else {
-          console.log(comment);
-          return res.status(200).send({ comment });
-        }
-      })
-      .catch((err) => {
-        next(err);
-      });
+  const incVotes = req.body.inc_votes;
+  const reqCommentId = req.params.comment_id;
+  //const reqKeys = Object.keys(req.body);
+
+  updateCommentVotes(reqCommentId, incVotes)
+    .then(([comment]) => {
+      return res.status(200).send({ comment });
+    })
+    .catch((err) => {
+      next(err);
+    });
 };
 
 exports.deleteCommentById = (req, res, next) => {

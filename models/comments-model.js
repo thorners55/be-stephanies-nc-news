@@ -14,18 +14,16 @@ exports.selectCommentByArticleId = (articleId) => {
 exports.selectAllCommentsByArticleId = (articleId, query, ascordesc) => {
   console.log("inside selectAllCommentsByArticleId function in comments model");
   return knex
-    .select("articles.*")
+    .select("*")
     .from("articles")
     .where("article_id", articleId)
-    .returning("*")
-    .then((articles) => {
-      console.log(articles);
-      if (articles.length < 1)
+    .then((article) => {
+      if (article.length === 0)
         return Promise.reject({ status: 404, msg: "article not found" });
     })
     .then(() => {
       return knex
-        .select("comments.*")
+        .select("*")
         .from("comments")
         .where("article_id", articleId)
         .orderBy(query || "created_at", ascordesc || "desc")
@@ -34,7 +32,12 @@ exports.selectAllCommentsByArticleId = (articleId, query, ascordesc) => {
 };
 
 exports.insertComment = (articleId, username, body) => {
-  console.log("inside insertComment in comments-model");
+  console.log("inside insertComment in comments model");
+  if (!username || !body)
+    return Promise.reject({
+      status: 400,
+      msg: "request must include username and body",
+    });
   return knex
     .select("*")
     .from("users")
@@ -51,13 +54,23 @@ exports.insertComment = (articleId, username, body) => {
     });
 };
 
-exports.updateCommentVotes = (commentId, votes) => {
+exports.updateCommentVotes = (commentId, votes = 0) => {
   console.log("inside updateCommentVotes in comments model");
-  console.log(commentId, votes);
-  return knex("comments")
-    .increment("votes", votes)
+
+  return knex
+    .select("*")
+    .from("comments")
     .where("comment_id", commentId)
-    .returning("*");
+    .then((comment) => {
+      if (comment.length < 1)
+        return Promise.reject({ status: 404, msg: "comment not found" });
+    })
+    .then(() => {
+      return knex("comments")
+        .increment("votes", votes)
+        .where("comment_id", commentId)
+        .returning("*");
+    });
 };
 
 exports.removeComment = (commentId) => {
