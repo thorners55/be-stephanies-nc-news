@@ -18,7 +18,6 @@ describe("app", () => {
             .get("/api/topics")
             .expect(200)
             .then(({ body }) => {
-              console.log(body);
               expect(Array.isArray(body.topics)).toBe(true);
             });
         });
@@ -27,7 +26,6 @@ describe("app", () => {
             .get("/api/topics")
             .expect(200)
             .then(({ body }) => {
-              console.log(body.topics);
               const correctProperties = body.topics.forEach((object) => {
                 expect(object).toHaveProperty("slug");
                 expect(object).toHaveProperty("description");
@@ -72,7 +70,6 @@ describe("app", () => {
             .get("/api/users/lurker")
             .expect(200)
             .then(({ body }) => {
-              console.log(body, "<-----");
               expect(body.user).toHaveProperty("username", "lurker");
               expect(body.user).toHaveProperty("avatar_url");
               expect(body.user).toHaveProperty("name");
@@ -107,7 +104,6 @@ describe("app", () => {
                 .get("/api/articles/2/comments")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body);
                   expect(body.comments).toEqual([]);
                 });
             });
@@ -116,7 +112,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body);
                   expect(Array.isArray(body.comments)).toBe(true);
                 });
             });
@@ -152,7 +147,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?sort_by=created_at")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body.comments);
                   expect(body.comments).toBeSortedBy("created_at", {
                     descending: true,
                   });
@@ -163,7 +157,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?sort_by=author")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body.comments);
                   expect(body.comments).toBeSortedBy("author", {
                     descending: true,
                   });
@@ -174,7 +167,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?sort_by=comment_id")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body.comments);
                   expect(body.comments).toBeSortedBy("comment_id", {
                     descending: true,
                   });
@@ -185,7 +177,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?sort_by=comment_id")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body.comments);
                   expect(body.comments).toBeSortedBy("comment_id", {
                     descending: true,
                   });
@@ -197,7 +188,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?sort_by=comment_id&order=asc")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body);
                   expect(body.comments).toBeSortedBy("comment_id");
                 });
             });
@@ -206,7 +196,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?sort_by=author&order=asc")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body);
                   expect(body.comments).toBeSortedBy("author");
                 });
             });
@@ -215,7 +204,6 @@ describe("app", () => {
                 .get("/api/articles/1/comments?order=asc")
                 .expect(200)
                 .then(({ body }) => {
-                  console.log(body);
                   expect(body.comments).toBeSortedBy("created_at");
                 });
             });
@@ -227,7 +215,6 @@ describe("app", () => {
               .get("/api/articles/10000/comments")
               .expect(404)
               .then(({ body }) => {
-                console.log(body.msg);
                 expect(body.msg).toBe("article not found");
               });
           });
@@ -236,7 +223,9 @@ describe("app", () => {
               .get("/api/articles/hashbrowns/comments")
               .expect(400)
               .then(({ body }) => {
-                console.log(body);
+                expect(body.msg).toBe(
+                  "400 Bad Request: Cannot access information - invalid request"
+                );
               });
           });
           test("status 400: sort_by query does not exist", () => {
@@ -244,7 +233,6 @@ describe("app", () => {
               .get("/api/articles/1/comments?sort_by=toast")
               .expect(400)
               .then(({ body }) => {
-                console.log(body);
                 expect(body.msg).toBe("sort_by or order request invalid");
               });
           });
@@ -305,15 +293,7 @@ describe("app", () => {
             .send({ username: "butter_bridge" })
             .expect(400)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe("request must include username and body");
-              /* return request(app)
-            .post("/api/articles/50000/comments")
-            .send({ username: "IRUser", body: "This is a comment" })
-            .expect(422)
-            .then(({ body }) => {
-              expect(body.msg).toBe("username not found");
-            }); */
             });
         });
       });
@@ -325,7 +305,6 @@ describe("app", () => {
           .get("/api/articles/1")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             expect(body.article.article_id).toBe(1);
             expect(body.article).toHaveProperty("comment_count");
             expect(body.article).toEqual({
@@ -357,8 +336,6 @@ describe("app", () => {
           .send({ inc_votes: 5 })
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
-
             expect(body.article).toHaveProperty("article_id");
           });
       });
@@ -368,7 +345,6 @@ describe("app", () => {
           .send({ inc_votes: 5 })
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             expect(body.article.votes).toBe(5);
             expect(body.article.article_id).toBe(2);
           });
@@ -389,7 +365,8 @@ describe("app", () => {
             .post("/api/articles/1/comments")
             .send({ username: "butter_bridge", body: "This is a comment" })
             .then(({ body }) => {
-              console.log(body);
+              expect(body.comment).toHaveProperty("comment_id");
+              expect(body.comment.article_id).toBe(1);
             })
             .then(() => {
               return request(app)
@@ -398,7 +375,6 @@ describe("app", () => {
                 .expect(200);
             })
             .then(({ body }) => {
-              console.log(body);
               expect(body).toHaveProperty("comment");
             });
         });
@@ -406,9 +382,6 @@ describe("app", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({ username: "butter_bridge", body: "This is a comment" })
-            .then(({ body }) => {
-              console.log(body);
-            })
             .then(() => {
               return request(app)
                 .patch("/api/comments/19")
@@ -428,9 +401,6 @@ describe("app", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .send({ username: "butter_bridge", body: "This is a comment" })
-            .then(({ body }) => {
-              console.log(body);
-            })
             .then(() => {
               return request(app)
                 .patch("/api/comments/19")
@@ -439,6 +409,7 @@ describe("app", () => {
             })
             .then(({ body }) => {
               expect(body.comment.votes).toBe(-3);
+              expect(body.comment.article_id).toBe(1);
             });
         });
         test("status 200: will increment votes, not update number", () => {
@@ -446,9 +417,6 @@ describe("app", () => {
             .post("/api/articles/1/comments")
             .send({ username: "butter_bridge", body: "This is a comment" })
             .then(({ body }) => {
-              console.log(body);
-            })
-            .then(() => {
               return request(app)
                 .patch("/api/comments/19")
                 .send({ inc_votes: 5 })
@@ -477,7 +445,6 @@ describe("app", () => {
             .get("/api/comments/3")
             .expect(405)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
             });
         });
@@ -487,7 +454,6 @@ describe("app", () => {
             .send({})
             .expect(200)
             .then(({ body }) => {
-              console.log(body);
               expect(body.comment.comment_id).toBe(1);
               expect(body.comment.votes).toBe(16);
             });
@@ -498,7 +464,6 @@ describe("app", () => {
             .send({ inc_votes: "cat" })
             .expect(400)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe(
                 "400 Bad Request: Cannot access information - invalid request"
               );
@@ -510,7 +475,6 @@ describe("app", () => {
             .send({ inc_votes: 1, name: "Stephanie" })
             .expect(200)
             .then(({ body }) => {
-              console.log(body);
               expect(body.comment.votes).toBe(17);
             });
         });
@@ -520,7 +484,6 @@ describe("app", () => {
             .send({ inc_votes: 1 })
             .expect(404)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe("comment not found");
             });
         });
@@ -532,10 +495,23 @@ describe("app", () => {
       });
       describe("DELETE /api/comments/:comment_id Error handling", () => {
         test("status 404: valid comment_id but does not exist", () => {
-          return request(app).delete("/api/comments/8000").expect(404);
+          return request(app)
+            .delete("/api/comments/8000")
+            .expect(404)
+            .then(({ body }) => {
+              expect(body.msg).toBe("comment not found");
+            });
         });
         test("status 400: invalid comment_id", () => {
           return request(app).delete("/api/comments/marmalade").expect(400);
+        });
+        test("status 405: method not allowed", () => {
+          return request(app)
+            .delete("/api/")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
+            });
         });
       });
 
@@ -548,7 +524,6 @@ describe("app", () => {
             .then(({ body }) => {
               expect(body.article.votes).toBe(100);
               expect(body.article.article_id).toBe(1);
-              console.log(body);
             });
         });
         test("status 400: invalid request - invalid inc_votes value", () => {
@@ -557,7 +532,6 @@ describe("app", () => {
             .send({ inc_votes: "cat" })
             .expect(400)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe(
                 "400 Bad Request: Cannot access information - invalid request"
               );
@@ -569,7 +543,6 @@ describe("app", () => {
             .send({ inc_votes: 1, name: "Stephanie" })
             .expect(200)
             .then(({ body }) => {
-              console.log(body);
               expect(body.article.article_id).toBe(1);
               expect(body.article.votes).toBe(101);
             });
@@ -611,7 +584,6 @@ describe("app", () => {
           .get("/api/articles")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             expect(body).toHaveProperty("articles");
           });
       });
@@ -631,7 +603,6 @@ describe("app", () => {
           .get("/api/articles")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             body.articles.forEach((article) => {
               expect(article).toHaveProperty("author");
               expect(article).toHaveProperty("title");
@@ -651,7 +622,6 @@ describe("app", () => {
           .get("/api/articles?author=butter_bridge")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             body.articles.forEach((object) => {
               expect(object.author).toBe("butter_bridge");
             });
@@ -664,8 +634,7 @@ describe("app", () => {
           .get("/api/articles?topic=cats")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
-            const testing = body.articles.forEach((object) => {
+            body.articles.forEach((object) => {
               expect(object.topic).toBe("cats");
             });
             expect(body.articles.length).not.toBe(0);
@@ -695,8 +664,7 @@ describe("app", () => {
           .get("/api/articles?author=rogersop&sort_by=comment_count&order=asc")
           .expect(200)
           .then(({ body }) => {
-            console.log(body.articles);
-            const convertToInt = body.articles.forEach((object) => {
+            body.articles.forEach((object) => {
               const number = object.comment_count;
               object.comment_count = parseInt(number);
               expect(object.author).toBe("rogersop");
@@ -717,7 +685,6 @@ describe("app", () => {
           .get("/api/articles?author=lurker")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             expect(body.articles).toEqual([]);
           });
       });
@@ -726,7 +693,6 @@ describe("app", () => {
           .get("/api/articles?topic=paper")
           .expect(200)
           .then(({ body }) => {
-            console.log(body);
             expect(body.articles).toEqual([]);
           });
       });
@@ -736,7 +702,6 @@ describe("app", () => {
             .get("/api/articles?sort_by=porridge")
             .expect(400)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe("sort_by or order request invalid");
             });
         });
@@ -745,7 +710,6 @@ describe("app", () => {
             .get("/api/articles?order=cornflakes")
             .expect(400)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe("Invalid order query");
             });
         });
@@ -754,7 +718,6 @@ describe("app", () => {
             .get("/api/articles?author=IRUser")
             .expect(404)
             .then(({ body }) => {
-              console.log;
               expect(body.msg).toBe("Username not found");
             });
         });
@@ -764,7 +727,6 @@ describe("app", () => {
             .expect(404)
             .then(({ body }) => {
               expect(body.msg).toBe("Article not found");
-              console.log(body);
             });
         });
         test("status 405: unsupported HTTP method", () => {
@@ -772,10 +734,21 @@ describe("app", () => {
             .post("/api/articles")
             .expect(405)
             .then(({ body }) => {
-              console.log(body);
               expect(body.msg).toBe("405 Bad Request: Method Not Allowed");
             });
         });
+      });
+    });
+
+    describe("GET /api", () => {
+      test("status 200", () => {
+        return request(app)
+          .get("/api")
+          .expect(200)
+          .then(({ body }) => {
+            expect(body).toHaveProperty("GET /api");
+            expect(body).toHaveProperty("GET /api/topics");
+          });
       });
     });
   });

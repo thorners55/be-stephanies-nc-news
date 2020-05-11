@@ -5,7 +5,6 @@ exports.getUser = (req, res, next) => {
   const reqUsername = req.params.username;
   selectUser(reqUsername)
     .then(([user]) => {
-      console.log(user);
       res.status(200).send({ user });
     })
     .catch((err) => {

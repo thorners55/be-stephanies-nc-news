@@ -13,8 +13,6 @@ app.use(express.json());
 app.use("/api", apiRouter);
 
 app.route("/*").all(handler404);
-// app.use(handler400);
-// app.use(handler405);
 app.use(handleCustomErrors);
 app.use(handlePSQLErrors);
 app.use(handleInternalErrors);

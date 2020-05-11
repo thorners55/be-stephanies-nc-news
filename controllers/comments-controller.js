@@ -2,19 +2,11 @@ const {
   updateCommentVotes,
   removeComment,
 } = require("../models/comments-model.js");
-const {
-  handler404,
-  handler400,
-  handler422,
-} = require("./errors-controller.js");
 
 exports.patchCommentById = (req, res, next) => {
   console.log("inside patchCommentById in comments controller");
-  console.log(req.params);
-  console.log(req.body);
   const incVotes = req.body.inc_votes;
   const reqCommentId = req.params.comment_id;
-  //const reqKeys = Object.keys(req.body);
 
   updateCommentVotes(reqCommentId, incVotes)
     .then(([comment]) => {
@@ -27,14 +19,10 @@ exports.patchCommentById = (req, res, next) => {
 
 exports.deleteCommentById = (req, res, next) => {
   console.log("inside deleteCommentById function in comments controller");
-  console.log(req.params);
   const { comment_id } = req.params;
-  const commentId = parseInt(comment_id);
-  removeComment(commentId)
+  removeComment(comment_id)
     .then((deleteCount) => {
-      console.log(deleteCount);
-      if (deleteCount === 0) handler404(req, res);
-      else return res.status(204).send();
+      res.status(204).send();
     })
     .catch((err) => {
       next(err);

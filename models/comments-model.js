@@ -75,21 +75,13 @@ exports.updateCommentVotes = (commentId, votes = 0) => {
 
 exports.removeComment = (commentId) => {
   console.log("inside removeComment in comments model");
-  console.log(commentId);
-  return knex("comments").where("comment_id", commentId).delete();
+  return knex("comments")
+    .where("comment_id", commentId)
+    .then((deleted) => {
+      if (deleted.length === 0)
+        return Promise.reject({ status: 404, msg: "comment not found" });
+    })
+    .then(() => {
+      return knex("comments").where("comment_id", commentId).delete();
+    });
 };
-
-/*   return knex("comments")
-    .count("article_id as comment_count")
-    .where("article_id", articleId);*/
-
-/* SELECT COUNT(column_name)
-FROM table_name
-WHERE condition; */
-
-/*
-SELECT articles.* FROM articles
-COUNT article_id AS comment_count
-WHERE article_id is articleId
-LEFT JOIN articles ON comments.article_id=articles.article_id 
-GROUP BY article_id*/

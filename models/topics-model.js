@@ -12,7 +12,6 @@ exports.selectTopicByQuery = (topic) => {
     .from("topics")
     .where("slug", topic)
     .then((topics) => {
-      console.log(topics);
       if (topics.length === 0)
         return Promise.reject({ status: 404, msg: "Topic not found" });
     });
