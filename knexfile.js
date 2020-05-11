@@ -1,8 +1,6 @@
-const { devConnection, testConnection } = require("./config.js");
+const { DB_URL } = process.env;
 
-// process.env.NODE_ENV = 'test'
-// NODE_ENV=test npm run seed   // seed-test
-// npm run seed   // seed-dev
+const { devConnection, testConnection } = require("./config.js");
 
 const ENV = process.env.NODE_ENV || "development";
 
@@ -22,6 +20,14 @@ const customConfig = {
   },
   test: {
     connection: testConnection,
+  },
+  production: {
+    connection: {
+      connectionString: DB_URL,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    },
   },
 };
 
