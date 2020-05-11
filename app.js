@@ -6,6 +6,7 @@ const {
   handler404,
   handleInternalErrors,
   handlePSQLErrors,
+  handler405,
 } = require("./controllers/errors-controller.js");
 
 app.use(express.json());
