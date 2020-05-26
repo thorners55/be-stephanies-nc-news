@@ -12,6 +12,7 @@
   "GET /api/articles": {
     "description": "serves an array of all topics",
     "queries": ["author", "topic", "sort_by", "order"],
+    "default queries": ["sort_by defaults to date, order defaults to desc"],
     "exampleResponse": {
       "articles": [
         {
@@ -23,5 +24,106 @@
         }
       ]
     }
+  },
+  "GET /api/articles/:article_id": {
+    "description": "serves an object with article info",
+    "queries": [],
+    "exampleResponse": {
+      "article": {
+        "article_id": 1,
+        "title": "Living in the shadow of a great man",
+        "body": "I find this existence challenging",
+        "votes": 100,
+        "topic": "mitch",
+        "author": "butter_bridge",
+        "created_at": "2018-11-15T12:21:54.171Z",
+        "comment_count": "13"
+      }
+    }
+  },
+  "GET /api/articles/:article_id/comments": {
+    "description": "serves an object with an array of comments for given article_id",
+    "queries": ["sort_by", "order"],
+    "default queries": ["sorts by created_at, order desc"],
+    "exampleResponse": {
+      "comments": [
+        {
+          "comment_id": 2,
+          "author": "butter_bridge",
+          "article_id": 1,
+          "votes": 14,
+          "created_at": "2016-11-22T12:36:03.389Z",
+          "body": "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky."
+        }
+      ]
+    }
+  },
+  "GET /api/users/:username": {
+    "description": "serves an object with user info of username, avatar_url, name",
+    "queries": [],
+    "exampleResponse": {
+      "user": {
+        "username": "lurker",
+        "avatar_url": "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        "name": "do_nothing"
+      }
+    }
+  },
+  "PATCH /api/articles/:article_id": {
+    "description": "request accepts an object with inc_votes property, responds with an object with updated article",
+    "queries": [],
+    "exampleRequest": { "inc_votes": 5 },
+    "exampleResponse": {
+      "article": {
+        "article_id": 2,
+        "title": "Sony Vaio; or, The Laptop",
+        "body": "This is great!",
+        "votes": 5,
+        "topic": "mitch",
+        "author": "icellusedkars",
+        "created_at": "2014-11-16T12:21:54.171Z"
+      }
+    }
+  },
+  "PATCH /api/comments/:comment_id": {
+    "description": "request accepts an object with inc_votes property, responds with an object with updated comment",
+    "queries": [],
+    "exampleRequest": {
+      "username": "butter_bridge",
+      "body": "This is a comment"
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 19,
+        "author": "butter_bridge",
+        "article_id": 1,
+        "votes": 0,
+        "created_at": "2020-05-26T08:39:39.558Z",
+        "body": "This is a comment"
+      }
+    }
+  },
+  "POST /api/articles/:article_id/comments": {
+    "description": "request body accepts object with username and body properties, responds with the posted comment",
+    "queries": [],
+    "exampleRequest": {
+      "username": "butter_bridge",
+      "body": "This is a comment"
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 19,
+        "author": "butter_bridge",
+        "article_id": 1,
+        "votes": 0,
+        "created_at": "2020-05-26T08:46:05.094Z",
+        "body": "This is a comment"
+      }
+    }
+  },
+  "DELETE /api/comments/:comment_id": {
+    "description": "deletes the given comment by comment_id with no response",
+    "queries": [],
+    "exampleResponse": []
   }
 }

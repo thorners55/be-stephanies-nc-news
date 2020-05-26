@@ -120,7 +120,7 @@ describe("app", () => {
                 .get("/api/articles/1/comments")
                 .expect(200)
                 .then(({ body }) => {
-                  const comments = body.comments.forEach((comment) => {
+                  body.comments.forEach((comment) => {
                     expect(comment).toHaveProperty("comment_id");
                     expect(comment).toHaveProperty("author");
                     expect(comment.article_id).toBe(1);
