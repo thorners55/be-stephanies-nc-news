@@ -329,6 +329,16 @@ describe("app", () => {
           });
       });
     });
+    describe("GET /api/articles/:article_id Error handling", () => {
+      test("status 404: article_id not found", () => {
+        return request(app)
+          .get("/api/articles/1000")
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Article not found");
+          });
+      });
+    });
     describe("PATCH /api/articles/:article_id", () => {
       test("status 200: responds with an object with property article, value is an object", () => {
         return request(app)
