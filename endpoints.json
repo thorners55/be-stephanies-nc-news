@@ -10,14 +10,13 @@
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all articles. Can request with query of any valid column and order by ascending or descending. Cannot only request by sort_by/order - must have a topic or author. However this can be undefined if wish to sort all articles.",
+    "description": "serves an array of all articles. Can request with query of any valid column and order by ascending or descending.",
     "queries": ["topic", "author", "sort_by", "order"],
     "default queries": ["sort_by defaults to date, order defaults to desc"],
     "exampleRequestPaths": {
-      "order": "/api/articles?order=asc",
-      "sort_by": "api/articles?author&sort_by=votes",
+      "sort_by/order": "/api/articles?order=desc&sort_by=votes",
       "topic/author": "api/articles?author=tickle122",
-      "sort_by and order": "api/articles?author&sort_by=comment_count&order=asc"
+      "topic/author and sort_by/order": "api/articles?author&sort_by=comment_count&order=asc"
     },
     "exampleResponse": {
       "articles": [
