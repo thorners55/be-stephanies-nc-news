@@ -4,8 +4,6 @@ const {
   formatComments,
 } = require("../db/utils/utils");
 
-// https://github.com/thorners55/nc-news/blob/master/db/utils/README.md
-
 describe("formatDates", () => {
   test("returns empty array when passed empty array", () => {
     expect(formatDates([])).toEqual([]);
@@ -306,4 +304,3 @@ describe("formatComments", () => {
     );
   });
 });
-//REFACTOR TO USE HAVEOWNPROPERTY ETC INSTEAD OF COPYING AND PASTING FULL ARRAY?
